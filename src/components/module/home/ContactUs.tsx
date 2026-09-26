@@ -59,9 +59,9 @@ export default function ContactUs() {
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="md:text-[30px] text-xl font-semibold text-white font-display">Email</h3>
-                                        <p className="text-white md:text-lg text-base font-normal break-all">
+                                        <a href="mailto:ceo.gobaadi@gmail.com" className="text-white md:text-lg text-base font-normal break-all">
                                             ceo.gobaadi@gmail.com
-                                        </p>
+                                        </a>
                                     </div>
                                 </div>
 
@@ -95,16 +95,16 @@ export default function ContactUs() {
                             <div className="flex flex-col items-start lg:items-end gap-2 mb-6 px-1">
                                 <span className="text-white/90 font-semibold text-sm tracking-wide">Follow Us On</span>
                                 <div className="flex gap-3">
-                                    <a href="#" aria-label="Facebook" className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-accent hover:bg-white/90 transition-all shadow-sm">
+                                    <a href="https://www.facebook.com/profile.php?id=61591434551881" aria-label="Facebook" className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-accent hover:bg-white/90 transition-all shadow-sm">
                                         <FaFacebookF className="w-4 h-4" aria-hidden />
                                     </a>
-                                    <a href="#" aria-label="Instagram" className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all">
+                                    {/* <a href="#" aria-label="Instagram" className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all">
                                         <FaInstagram className="w-4 h-4" aria-hidden />
                                     </a>
                                     <a href="#" aria-label="X" className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all">
                                         <FaXTwitter className="w-4 h-4" aria-hidden />
-                                    </a>
-                                    <a href="#" aria-label="LinkedIn" className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all">
+                                    </a> */}
+                                    <a href="https://www.linkedin.com/company/gobaadi" aria-label="LinkedIn" className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all">
                                         <FaLinkedinIn className="w-4 h-4" aria-hidden />
                                     </a>
                                 </div>
