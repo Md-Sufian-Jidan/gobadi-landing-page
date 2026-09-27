@@ -11,6 +11,7 @@ describe("Home page", () => {
     expect(document.getElementById("about")).toBeInTheDocument();
     expect(document.getElementById("contact")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: /Where Livestock Meets Intelligence/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: /Something New Is/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /Empowering Smarter Animal Care Through AI/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /Live Now!/i })).toBeInTheDocument();
   });
 });

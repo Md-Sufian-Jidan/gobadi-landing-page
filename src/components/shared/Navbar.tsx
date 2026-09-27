@@ -23,7 +23,7 @@ export default function Navbar() {
     },
     {
       title: "Our Vision",
-      href: "#our-visions",
+      href: "#our-vision",
     },
   ];
 

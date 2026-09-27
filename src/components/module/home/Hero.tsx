@@ -51,6 +51,7 @@ const textLineVariants: Variants = {
 export default function Hero() {
     return (
         <section
+            id="hero"
             aria-label="Gobadi hero"
             className="relative mx-auto max-w-[1350px] px-4 sm:px-6 lg:px-0 mt-10 lg:mt-20 "
         >
@@ -67,9 +68,9 @@ export default function Hero() {
                         <div className="absolute inset-0 flex items-center md:p-6 p-3 sm:p-10 lg:p-14">
                             <h1 className="font-display font-black leading-[1.05] text-[30px] md:text-[72px]">
                                 <span className="text-primary">Where</span>{" "}
-                                <span className="text-accent">Livestock</span>
+                                <span className="text-accent">Livestock</span>{" "}
                                 <br />
-                                <span className="text-primary">Meets</span>
+                                <span className="text-primary">Meets</span>{" "}
                                 <br />
                                 <span className="text-accent">Intelligence.</span>
                             </h1>

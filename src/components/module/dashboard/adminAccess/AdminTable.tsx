@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import ResuableTable, { TableColumn } from "@/components/shared/ResuableTable"
 import { MoreVertical, Eye, Edit, Trash2, ShieldCheck, ShieldOff } from "lucide-react"
 import {
@@ -10,7 +9,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { getAdmins, toggleAdminStatus } from "@/services/admin.service"
-import { toUiDesignation } from "@/lib/utils"
+import { resolveAvatarUrl, toUiDesignation } from "@/lib/utils"
+import { Avatar } from "@/components/ui/avatar"
 import type { Admin } from "@/types/admin.type"
 import { useEffect, useMemo, useState } from "react"
 import AdminDetailModal from "./AdminDetailModal"
@@ -101,21 +101,13 @@ export default function AdminTable({
             header: "Name",
             cell: (item) => (
                 <div className="flex items-center gap-3 min-w-[180px]">
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden bg-[#F0EDE8] flex-shrink-0 ring-1 ring-[#EAE5DD]">
-                        {item.avatar ? (
-                            <Image
-                                src={item.avatar}
-                                alt={item.name || "Admin"}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-sm font-bold text-[#525252]">
-                                {(item.name || "A")[0]}
-                            </div>
-                        )}
-                    </div>
+                    <Avatar
+                        src={item.avatar ? resolveAvatarUrl(item.avatar) : undefined}
+                        alt={item.name || "Admin"}
+                        fallback={(item.name || "A")[0]}
+                        size="sm"
+                        className="w-9 h-9 flex-shrink-0 bg-[#F0EDE8] text-[#525252] ring-1 ring-[#EAE5DD] font-bold text-sm"
+                    />
                     <div className="flex flex-col leading-tight">
                         <span className="font-semibold text-[#1A1A1A] text-sm whitespace-nowrap">
                             {(item.name || "").toUpperCase()}

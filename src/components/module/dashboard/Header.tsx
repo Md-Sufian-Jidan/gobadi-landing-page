@@ -18,6 +18,7 @@ import { Kbd } from "@/components/ui/kbd";
 import magnifyingglassicon from "@/assets/magnifyingglass.svg"
 import { useAdminProfile } from "@/hooks/useAdminProfile";
 import { resolveAvatarUrl } from "@/lib/utils";
+import { Avatar } from "@/components/ui/avatar";
 
 interface HeaderProps {
   onOpenMobileMenu?: () => void;
@@ -104,34 +105,22 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
 
           {/* User Profile Avatar */}
           <div className="flex items-center gap-3 cursor-pointer group">
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt={displayName}
-                width={50}
-                height={50}
-                className="hidden md:block w-12 h-12 object-cover rounded-full"
-              />
-            ) : (
-              <div className="hidden md:flex w-10 h-10 rounded-full bg-[#C15C2B] items-center justify-center text-white font-bold text-sm">
-                {initials}
-              </div>
-            )}
+            <Avatar
+              src={avatarUrl}
+              alt={displayName}
+              fallback={initials}
+              size="lg"
+              className="hidden md:flex w-12 h-12 bg-[#C15C2B] text-white border-none font-bold text-sm"
+            />
             <DropdownMenu>
               <DropdownMenuTrigger className="md:hidden block">
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt={displayName}
-                    width={30}
-                    height={30}
-                    className="block w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <div className="flex w-10 h-10 rounded-full bg-[#C15C2B] items-center justify-center text-white font-bold text-sm">
-                    {initials}
-                  </div>
-                )}
+                <Avatar
+                  src={avatarUrl}
+                  alt={displayName}
+                  fallback={initials}
+                  size="md"
+                  className="w-10 h-10 bg-[#C15C2B] text-white border-none font-bold text-sm"
+                />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuGroup className="p-2">
