@@ -59,7 +59,7 @@ async function authAxios(
     return res;
 }
 
-// ─── GET /notifications (admin: all notifications) ─────────────────────────────
+// ─── GET /dashboard/notifications (admin: all notifications) ─────────────────────────────
 export async function getNotifications(
     page = 1,
     limit = 20,
@@ -73,7 +73,7 @@ export async function getNotifications(
     if (search) params.set("search", search);
     if (type && type !== "all") params.set("type", type);
 
-    const res = await authAxios(`${api_url}/notifications?${params.toString()}`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications?${params.toString()}`, {
         method: "GET",
     });
     const result = res.data;
@@ -88,10 +88,10 @@ export async function getNotifications(
     return { status: true, data: result.data, meta: result.meta };
 }
 
-// ─── GET /notifications/user (current user's notifications) ─────────────────────
+// ─── GET /dashboard/notifications/user (current user's notifications) ─────────────────────
 export async function getNotificationsByUser(page = 1, limit = 20) {
     const res = await authAxios(
-        `${api_url}/notifications/user?page=${page}&limit=${limit}`,
+        `${api_url}/dashboard/notifications/user?page=${page}&limit=${limit}`,
         { method: "GET" }
     );
     const result = res.data;
@@ -106,9 +106,9 @@ export async function getNotificationsByUser(page = 1, limit = 20) {
     return { status: true, data: result.data, meta: result.meta };
 }
 
-// ─── GET /notifications/unread-count ──────────────────────────────────────────
+// ─── GET /dashboard/notifications/unread-count ──────────────────────────────────────────
 export async function getUnreadCount() {
-    const res = await authAxios(`${api_url}/notifications/unread-count`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/unread-count`, {
         method: "GET",
     });
     const result = res.data;
@@ -120,12 +120,12 @@ export async function getUnreadCount() {
         };
     }
 
-    return { status: true, data: result.data as { count: number } };
+    return { status: true, data: (result?.data ?? result) as { count: number } };
 }
 
-// ─── PATCH /notifications/:id/read ────────────────────────────────────────────
+// ─── PATCH /dashboard/notifications/:id/read ────────────────────────────────────────────
 export async function markAsRead(id: string) {
-    const res = await authAxios(`${api_url}/notifications/${id}/read`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/${id}/read`, {
         method: "PATCH",
     });
     const result = res.data;
@@ -137,12 +137,12 @@ export async function markAsRead(id: string) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
-// ─── PATCH /notifications/read-all ────────────────────────────────────────────
+// ─── PATCH /dashboard/notifications/read-all ────────────────────────────────────────────
 export async function markAllAsRead() {
-    const res = await authAxios(`${api_url}/notifications/read-all`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/read-all`, {
         method: "PATCH",
     });
     const result = res.data;
@@ -154,10 +154,10 @@ export async function markAllAsRead() {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
-// ─── POST /notifications — create notification for a specific user ─────────────
+// ─── POST /dashboard/notifications — create notification for a specific user ─────────────
 export interface CreateNotificationPayload {
     title: string;
     body: string;
@@ -170,7 +170,7 @@ export interface CreateNotificationPayload {
 }
 
 export async function createNotification(payload: CreateNotificationPayload) {
-    const res = await authAxios(`${api_url}/notifications`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications`, {
         method: "POST",
         data: payload,
     });
@@ -183,12 +183,12 @@ export async function createNotification(payload: CreateNotificationPayload) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
-// ─── POST /notifications/send — send to specific users ───────────────────────
+// ─── POST /dashboard/notifications/send — send to specific users ───────────────────────
 export async function sendToUsers(payload: SendNotificationPayload) {
-    const res = await authAxios(`${api_url}/notifications/send`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/send`, {
         method: "POST",
         data: payload,
     });
@@ -201,12 +201,12 @@ export async function sendToUsers(payload: SendNotificationPayload) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
-// ─── POST /notifications/broadcast — broadcast to ALL users (or by role) ──────
+// ─── POST /dashboard/notifications/broadcast — broadcast to ALL users (or by role) ──────
 export async function broadcastNotification(payload: BroadcastNotificationPayload) {
-    const res = await authAxios(`${api_url}/notifications/broadcast`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/broadcast`, {
         method: "POST",
         data: payload,
     });
@@ -219,12 +219,12 @@ export async function broadcastNotification(payload: BroadcastNotificationPayloa
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
-// ─── DELETE /notifications/:id ─────────────────────────────────────────────────
+// ─── DELETE /dashboard/notifications/:id ─────────────────────────────────────────────────
 export async function deleteNotification(id: string) {
-    const res = await authAxios(`${api_url}/notifications/${id}`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/${id}`, {
         method: "DELETE",
     });
     const result = res.data;
@@ -239,9 +239,9 @@ export async function deleteNotification(id: string) {
     return { status: true };
 }
 
-// ─── GET /notifications/:id ───────────────────────────────────────────────────
+// ─── GET /dashboard/notifications/:id ───────────────────────────────────────────────────
 export async function getNotificationById(id: string) {
-    const res = await authAxios(`${api_url}/notifications/${id}`, {
+    const res = await authAxios(`${api_url}/dashboard/notifications/${id}`, {
         method: "GET",
     });
     const result = res.data;
@@ -253,5 +253,5 @@ export async function getNotificationById(id: string) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }

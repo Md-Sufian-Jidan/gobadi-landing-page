@@ -16,26 +16,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
 import magnifyingglassicon from "@/assets/magnifyingglass.svg"
-import { getAdminProfile } from "@/services/adminAuth.service";
-import type { AdminProfile } from "@/types/auth.type";
+import { useAdminProfile } from "@/hooks/useAdminProfile";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface HeaderProps {
   onOpenMobileMenu?: () => void;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+};
+
 export default function Header({ onOpenMobileMenu }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [admin, setAdmin] = useState<AdminProfile | null>(null);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      const result = await getAdminProfile();
-      if (result.status && result.data) {
-        setAdmin(result.data);
-      }
-    }
-    fetchProfile();
-  }, []);
+  const { data: admin } = useAdminProfile();
 
   // Keyboard shortcut Cmd/Ctrl + K to open search modal
   useEffect(() => {
@@ -50,7 +45,8 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
   }, []);
 
   const displayName = admin?.name || "";
-  const displayRole = admin?.role === "super_admin" ? "Super Admin" : "";
+  const displayRole = (admin?.role && ROLE_LABELS[admin.role]) || "";
+  const avatarUrl = resolveAvatarUrl(admin?.avatar);
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -108,9 +104,9 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
 
           {/* User Profile Avatar */}
           <div className="flex items-center gap-3 cursor-pointer group">
-            {admin?.avatar ? (
+            {avatarUrl ? (
               <Image
-                src={admin.avatar}
+                src={avatarUrl}
                 alt={displayName}
                 width={50}
                 height={50}
@@ -123,9 +119,9 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
             )}
             <DropdownMenu>
               <DropdownMenuTrigger className="md:hidden block">
-                {admin?.avatar ? (
+                {avatarUrl ? (
                   <Image
-                    src={admin.avatar}
+                    src={avatarUrl}
                     alt={displayName}
                     width={30}
                     height={30}

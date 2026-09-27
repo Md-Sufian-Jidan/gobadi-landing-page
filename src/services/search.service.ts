@@ -61,7 +61,7 @@ async function authAxios(
 
 export async function globalSearch(query: string) {
   const res = await authAxios(
-    `${api_url}/search?q=${encodeURIComponent(query)}`,
+    `${api_url}/dashboard/search?q=${encodeURIComponent(query)}`,
     { method: "GET" }
   );
   const result = res.data;

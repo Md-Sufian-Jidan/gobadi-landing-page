@@ -96,7 +96,7 @@ export async function getAnimals(
     const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
     const filterParam = filter && filter !== "all" ? `&filter=${encodeURIComponent(filter)}` : "";
     const res = await authAxios(
-        `${api_url}/animals?page=${page}&limit=${limit}${searchParam}${filterParam}`,
+        `${api_url}/dashboard/animals?page=${page}&limit=${limit}${searchParam}${filterParam}`,
         { method: "GET" }
     );
     const result = res.data;
@@ -108,12 +108,17 @@ export async function getAnimals(
         };
     }
 
-    return { status: true, data: result.data as AnimalListItem[], meta: result.meta };
+    const animals = Array.isArray(result.data)
+        ? result.data
+        : Array.isArray(result)
+          ? result
+          : [];
+    return { status: true, data: animals as AnimalListItem[], meta: result.meta };
 }
 
 export async function getAnimalById(id: number) {
     const res = await authAxios(
-        `${api_url}/animals/${id}`,
+        `${api_url}/dashboard/animals/${id}`,
         { method: "GET" }
     );
     const result = res.data;
@@ -125,12 +130,13 @@ export async function getAnimalById(id: number) {
         };
     }
 
-    return { status: true, data: result.data as AnimalListItem };
+    // The endpoint returns the animal object raw; tolerate a `{ data }` envelope too.
+    return { status: true, data: (result?.data ?? result) as AnimalListItem };
 }
 
 export async function deleteAnimalById(id: number) {
     const res = await authAxios(
-        `${api_url}/animals/${id}`,
+        `${api_url}/dashboard/animals/${id}`,
         { method: "DELETE" }
     );
     const result = res.data;

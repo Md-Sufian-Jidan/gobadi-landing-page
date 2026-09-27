@@ -11,6 +11,15 @@ const getApiBaseUrl = () => {
     return url;
 };
 
+type ApiAuthResponse = {
+    success?: boolean;
+    statusCode?: number;
+    message?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    data?: { accessToken?: string; refreshToken?: string } & Record<string, unknown>;
+} | null;
+
 export async function registerAction(data: {
     name: string;
     identifier: string;
@@ -34,35 +43,54 @@ export async function registerAction(data: {
 }
 
 export async function loginAction(data: { identifier: string; password: string }) {
-    const API_BASE_URL = getApiBaseUrl();
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-    const result = await res.json();
+    try {
+        const API_BASE_URL = getApiBaseUrl();
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
 
-    if (!res.ok) {
-        return { status: false, message: result.message || "Login failed" };
+        let result: ApiAuthResponse = null;
+        try {
+            result = await res.json();
+        } catch {
+            result = null;
+        }
+
+        if (!res.ok) {
+            return { status: false, message: result?.message || "Login failed" };
+        }
+
+        const payload = result?.data ?? result;
+        if (!payload?.accessToken || !payload?.refreshToken) {
+            return {
+                status: false,
+                message: result?.message || "Login response did not contain auth tokens",
+            };
+        }
+
+        const cookieStore = await cookies();
+        cookieStore.set("accessToken", payload.accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60, // 1 hour
+            path: "/",
+        });
+        cookieStore.set("refreshToken", payload.refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+            path: "/",
+        });
+
+        return { status: true, data: payload };
+    } catch (error) {
+        console.error("[loginAction] failed:", error);
+        return { status: false, message: "Could not reach the login service. Please try again." };
     }
-
-    const cookieStore = await cookies();
-    cookieStore.set("accessToken", result.data.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60, // 1 hour
-        path: "/",
-    });
-    cookieStore.set("refreshToken", result.data.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: "/",
-    });
-
-    return { status: true, data: result.data };
 }
 
 export async function logoutAction() {

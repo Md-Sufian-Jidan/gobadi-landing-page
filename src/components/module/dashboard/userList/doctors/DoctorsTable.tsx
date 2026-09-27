@@ -17,6 +17,15 @@ import DeleteDoctorDialog from "./DeleteDoctorDialog"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/queryKeys"
 
+const formatDate = (value?: string | null) =>
+    value
+        ? new Date(value).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+          })
+        : "N/A"
+
 export interface DoctorTableProps {
     searchValue?: string
     selectedFilter?: string
@@ -129,6 +138,29 @@ export default function DoctorsTable({
             header: "Total Appointments",
             cell: (item) => (
                 <span className="font-medium text-[#1A1A1A]">{item.totalAppointments || "N/A"}</span>
+            ),
+        },
+        {
+            key: "role",
+            header: "Role",
+            cell: (item) => (
+                <span className="font-medium text-[#1A1A1A] capitalize">
+                    {item.role ? item.role.replace("_", " ") : "N/A"}
+                </span>
+            ),
+        },
+        {
+            key: "joined",
+            header: "Joined",
+            cell: (item) => (
+                <span className="font-medium text-[#1A1A1A]">{formatDate(item.createdAt)}</span>
+            ),
+        },
+        {
+            key: "updated",
+            header: "Updated",
+            cell: (item) => (
+                <span className="font-medium text-[#1A1A1A]">{formatDate(item.updatedAt)}</span>
             ),
         },
         {

@@ -26,5 +26,5 @@ export interface AdminProfile {
   phone: string;
   verified: boolean;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }

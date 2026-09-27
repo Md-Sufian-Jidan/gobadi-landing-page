@@ -55,35 +55,35 @@ async function authFetch(url: string, options: AuthFetchOptions = {}): Promise<R
 
 export async function getUserProfile() {
     const API_BASE_URL = getApiBaseUrl();
-    const res = await authFetch(`${API_BASE_URL}/auth/profile`, { method: "GET" });
+    const res = await authFetch(`${API_BASE_URL}/dashboard/auth/profile`, { method: "GET" });
     const result = await res.json();
     if (!res.ok) {
         return { status: false, message: result.message || "Login failed" };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function getAllUsers(page = 1, limit = 10) {
     const API_BASE_URL = getApiBaseUrl();
-    const res = await authFetch(`${API_BASE_URL}/users?page=${page}&limit=${limit}`, { method: "GET" });
+    const res = await authFetch(`${API_BASE_URL}/dashboard/users?page=${page}&limit=${limit}`, { method: "GET" });
     const result = await res.json();
     if (!res.ok) {
         return { status: false, message: result.message || "Failed to fetch users" };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function getUserById(id: string) {
     const API_BASE_URL = getApiBaseUrl();
-    const res = await authFetch(`${API_BASE_URL}/users/${id}`, { method: "GET" });
+    const res = await authFetch(`${API_BASE_URL}/dashboard/users/${id}`, { method: "GET" });
     const result = await res.json();
     if (!res.ok) {
         return { status: false, message: result.message || "Failed to fetch user" };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function updateUser(id: string, payload: FormData | Record<string, string | undefined>) {
@@ -107,7 +107,7 @@ export async function updateUser(id: string, payload: FormData | Record<string, 
         body = JSON.stringify(payload);
     }
 
-    const res = await authFetch(`${API_BASE_URL}/users/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/dashboard/users/${id}`, {
         method: "PUT",
         headers: requestHeaders,
         body,
@@ -118,12 +118,12 @@ export async function updateUser(id: string, payload: FormData | Record<string, 
         return { status: false, message: result.message || "Failed to update user" };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function deleteUser(id: string) {
     const API_BASE_URL = getApiBaseUrl();
-    const res = await authFetch(`${API_BASE_URL}/users/${id}`, { method: "DELETE" });
+    const res = await authFetch(`${API_BASE_URL}/dashboard/users/${id}`, { method: "DELETE" });
     const result = await res.json();
     if (!res.ok) {
         return { status: false, message: result.message || "Failed to delete user" };

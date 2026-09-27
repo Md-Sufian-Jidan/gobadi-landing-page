@@ -6,6 +6,7 @@ import {
     BarChart,
     Cell,
     ReferenceLine,
+    ResponsiveContainer,
     XAxis,
     YAxis,
 } from "recharts";
@@ -26,11 +27,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import filtericon from "@/assets/filter-icon.svg"
-import filterarrowicon from "@/assets/filter-arrow-icon.svg"
-
+import filtericon from "@/assets/filter-icon.svg";
+import filterarrowicon from "@/assets/filter-arrow-icon.svg";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { mapPeriod, periodLabel } from "@/lib/period";
 
 const chartConfig = {
     users: {
@@ -44,29 +45,37 @@ interface Props {
 }
 
 export default function DailyUserChart({ period }: Props) {
-    const [filter, setFilter] = useState("last 7 days");
+    const [filter, setFilter] = useState(periodLabel(period));
+    const requestPeriod = mapPeriod(filter);
+
+    useEffect(() => {
+        setFilter(periodLabel(period));
+    }, [period]);
 
     const { data: result, isLoading: loading } = useQuery({
-        queryKey: queryKeys.dailyUsers(filter),
-        queryFn: () => getDailyUsers(filter as Period),
+        queryKey: queryKeys.dailyUsers(requestPeriod),
+        queryFn: () => getDailyUsers(requestPeriod),
     });
 
     const chartData = result?.status && result.data ? result.data.chartData : [];
     const summary = result?.status && result.data ? result.data.summary : { total: 0, changePercent: 0, isPositive: true };
-    const isDataEmpty = !loading && (summary.total === 0 || chartData.length === 0 || chartData.every((item) => item.users === 0));
+    const isDataEmpty = !loading && (summary.total === 0 || chartData.length === 0);
 
     const maxVal = chartData.length > 0 ? Math.max(...chartData.map((d) => d.users)) : 0;
-    const referenceLine = Math.round(maxVal * 0.6);
+    const referenceLine = maxVal > 0 ? Math.max(1, Math.round(maxVal * 0.55)) : 350;
+    const yDomainMax = maxVal > 0 ? Math.max(maxVal * 1.35, 10) : 100;
 
     return (
-        <div className="w-full h-80 rounded-[24px] border border-[#EAE5DD] bg-white p-3 shadow-xs flex flex-col justify-between">
+        <div className="w-full h-80 rounded-[24px] border border-[#EAE5DD] bg-white p-5 sm:p-6 shadow-xs flex flex-col justify-between relative overflow-hidden font-sans">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-[#1A1A1A] font-display">Daily User</h3>
+            <div className="flex items-start justify-between">
+                <h3 className="text-base sm:text-lg font-bold leading-tight text-[#1A1A1A] font-display">
+                    Daily User
+                </h3>
 
                 {/* Dropdown Filter */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 px-3  py-2 rounded-[10px] border border-[#E5E0D8] text-xs font-semibold text-[#525252] hover:text-[#1A1A1A] transition-colors cursor-pointer outline-none">
+                    <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-[10px] border border-[#E5E0D8] text-xs font-semibold text-[#525252] hover:text-[#1A1A1A] transition-colors cursor-pointer outline-none shrink-0">
                         <Image src={filtericon} alt="Filter Icon" className="w-3.5 h-3.5" />
                         <span>{filter}</span>
                         <Image src={filterarrowicon} alt="Filter Icon" className="w-5 h-5" />
@@ -86,7 +95,7 @@ export default function DailyUserChart({ period }: Props) {
             </div>
 
             {/* Metrics Row */}
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2">
                 <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1A1A1A] font-display">
                     {loading ? "0" : summary.total}
                 </span>
@@ -106,7 +115,7 @@ export default function DailyUserChart({ period }: Props) {
             </div>
 
             {/* Chart Section */}
-            <div className="w-full mt-4 h-56 relative">
+            <div className="w-full mt-2 h-52 relative">
                 {isDataEmpty && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[1px] z-20 rounded-[16px]">
                         <span className="text-xs font-semibold text-[#8C857B] bg-[#F7F4EE] px-3.5 py-1.5 rounded-full border border-[#EAE5DD] shadow-xs">
@@ -115,67 +124,71 @@ export default function DailyUserChart({ period }: Props) {
                     </div>
                 )}
                 <ChartContainer config={chartConfig} className="h-full w-full">
-                    <BarChart
-                        data={chartData}
-                        margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
-                        barCategoryGap="20%"
-                    >
-                        <XAxis
-                            dataKey="day"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={12}
-                            className="text-xs font-medium fill-[#A39E93]"
-                        />
-                        <YAxis hide domain={[0, maxVal * 1.15]} />
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 22, right: 0, left: 0, bottom: 0 }}
+                            barSize={24}
+                        >
+                            <XAxis
+                                dataKey="day"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={10}
+                                tick={{ fill: "#A39E93", fontSize: 11, fontWeight: 500 }}
+                            />
+                            <YAxis hide domain={[0, yDomainMax]} />
 
-                        <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                        />
+                            <ChartTooltip
+                                cursor={false}
+                                content={<ChartTooltipContent hideLabel />}
+                            />
 
-                        <ReferenceLine
-                            y={referenceLine}
-                            stroke="#8C7063"
-                            strokeDasharray="3 3"
-                            strokeWidth={1.5}
-                            label={({ viewBox }) => {
-                                const { x, y } = viewBox;
-                                return (
-                                    <g transform={`translate(${x + 4}, ${y - 12})`}>
-                                        <rect
-                                            width={68}
-                                            height={22}
-                                            rx={6}
-                                            fill="#3B2319"
+                            {maxVal > 0 && (
+                                <ReferenceLine
+                                    y={referenceLine}
+                                    stroke="#8C7063"
+                                    strokeDasharray="3 3"
+                                    strokeWidth={1.2}
+                                    label={({ viewBox }) => {
+                                        const { x = 0, y = 0 } = viewBox || {};
+                                        return (
+                                            <g transform={`translate(${x}, ${y - 11})`}>
+                                                <rect
+                                                  width={64}
+                                                  height={20}
+                                                  rx={6}
+                                                  fill="#3B2319"
+                                                />
+                                                <text
+                                                  x={32}
+                                                  y={13}
+                                                  textAnchor="middle"
+                                                  fill="#FFFFFF"
+                                                  fontSize={10}
+                                                  fontWeight={600}
+                                                >
+                                                  {referenceLine} users
+                                                </text>
+                                            </g>
+                                        );
+                                    }}
+                                />
+                            )}
+
+                            <Bar dataKey="users" radius={[12, 12, 12, 12]}>
+                                {chartData.map((entry, index) => {
+                                    const isMax = entry.users === maxVal && maxVal > 0;
+                                    return (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={isMax ? "#C15C2B" : "#F7EFEA"}
                                         />
-                                        <text
-                                            x={34}
-                                            y={14}
-                                            textAnchor="middle"
-                                            fill="#FFFFFF"
-                                            fontSize={10}
-                                            fontWeight={600}
-                                        >
-                                            {referenceLine} users
-                                        </text>
-                                    </g>
-                                );
-                            }}
-                        />
-
-                        <Bar dataKey="users" radius={[12, 12, 12, 12]}>
-                            {chartData.map((entry, index) => {
-                                const isMax = entry.users === maxVal;
-                                return (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={isMax ? "#C15C2B" : "#F7EFEA"}
-                                    />
-                                );
-                            })}
-                        </Bar>
-                    </BarChart>
+                                    );
+                                })}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
                 </ChartContainer>
             </div>
         </div>

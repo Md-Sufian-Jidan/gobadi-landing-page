@@ -121,7 +121,7 @@ export default function FarmersTable({
             key: "addedTask",
             header: "Added Task",
             cell: (item) => (
-                <span className="font-medium text-[#1A1A1A]">{item.addedTask || "-"}</span>
+                <span className="font-medium text-[#1A1A1A]">{item.addedTask || "0"}</span>
             ),
         },
         {
@@ -151,7 +151,7 @@ export default function FarmersTable({
                             <Eye className="w-3.5 h-3.5 text-[#525252]" />
                             <span>View Farmer</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+                        {/* <DropdownMenuItem
                             variant="destructive"
                             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer"
                             onClick={() => {
@@ -161,7 +161,7 @@ export default function FarmersTable({
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Delete Farmer</span>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                     </DropdownMenuContent>
                 </DropdownMenu>
             ),

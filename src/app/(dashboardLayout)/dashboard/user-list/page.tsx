@@ -16,13 +16,7 @@ import TaskFeatureChart from "@/components/module/dashboard/userList/TaskFeature
 import filtericon from "@/assets/filter-icon.svg"
 import filterarrowicon from "@/assets/filter-arrow-icon.svg"
 import Image from "next/image";
-import type { Period } from "@/types/api.type";
-
-function mapPeriod(filter: string): Period {
-    if (filter === "last 30 days") return "last_30_days";
-    if (filter === "this year") return "this_year";
-    return "last_7_days";
-}
+import { mapPeriod } from "@/lib/period";
 
 export default function UserListPage() {
     const [globalFilter, setGlobalFilter] = useState("last 7 days");
@@ -79,8 +73,8 @@ export default function UserListPage() {
             </div>
 
             {/* Bottom Row: Task Feature User Chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
-                <div className="lg:col-span-5 flex flex-col">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
+                <div className="lg:col-span-6 flex flex-col">
                     <TaskFeatureChart period={period} />
                 </div>
             </div>

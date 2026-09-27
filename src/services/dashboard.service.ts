@@ -125,7 +125,7 @@ export async function getDashboardStats(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as DashboardStats };
+    return { status: true, data: (result?.data ?? result) as DashboardStats };
 }
 
 export async function getUserGrowth(period: Period = "last_7_days") {
@@ -142,7 +142,7 @@ export async function getUserGrowth(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as UserGrowthData };
+    return { status: true, data: (result?.data ?? result) as UserGrowthData };
 }
 
 export async function getUserOS(period: Period = "last_7_days") {
@@ -159,7 +159,7 @@ export async function getUserOS(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as UserOSData };
+    return { status: true, data: (result?.data ?? result) as UserOSData };
 }
 
 export async function getAiUsers(period: Period = "last_7_days") {
@@ -176,7 +176,7 @@ export async function getAiUsers(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as AiUserData };
+    return { status: true, data: (result?.data ?? result) as AiUserData };
 }
 
 export async function getAppointments(period: Period = "last_7_days") {
@@ -193,7 +193,7 @@ export async function getAppointments(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as AppointmentData };
+    return { status: true, data: (result?.data ?? result) as AppointmentData };
 }
 
 export async function getRetention(period: Period = "last_7_days") {
@@ -210,7 +210,7 @@ export async function getRetention(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as RetentionData };
+    return { status: true, data: (result?.data ?? result) as RetentionData };
 }
 
 export async function getUserListStats(period: Period = "last_7_days") {
@@ -227,7 +227,7 @@ export async function getUserListStats(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as UserListStats };
+    return { status: true, data: (result?.data ?? result) as UserListStats };
 }
 
 export async function getUserLocation(
@@ -248,7 +248,7 @@ export async function getUserLocation(
         };
     }
 
-    return { status: true, data: result.data as UserLocationData };
+    return { status: true, data: (result?.data ?? result) as UserLocationData };
 }
 
 export async function getDailyUsers(period: Period = "last_7_days") {
@@ -265,7 +265,7 @@ export async function getDailyUsers(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as DailyUserData };
+    return { status: true, data: (result?.data ?? result) as DailyUserData };
 }
 
 export async function getRegisteredAnimals(period: Period = "last_7_days") {
@@ -282,7 +282,7 @@ export async function getRegisteredAnimals(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as RegisteredAnimalData };
+    return { status: true, data: (result?.data ?? result) as RegisteredAnimalData };
 }
 
 export async function getTaskFeatureUsers(period: Period = "last_7_days") {
@@ -299,7 +299,7 @@ export async function getTaskFeatureUsers(period: Period = "last_7_days") {
         };
     }
 
-    return { status: true, data: result.data as TaskFeatureUserData };
+    return { status: true, data: (result?.data ?? result) as TaskFeatureUserData };
 }
 
 export async function getFarmers(page = 1, limit = 10, search?: string, status?: string) {
@@ -323,7 +323,7 @@ export async function getFarmers(page = 1, limit = 10, search?: string, status?:
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function getDoctors(page = 1, limit = 10, search?: string, status?: string) {
@@ -347,7 +347,7 @@ export async function getDoctors(page = 1, limit = 10, search?: string, status?:
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function getDoctorById(id: number) {
@@ -364,7 +364,7 @@ export async function getDoctorById(id: number) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function deleteDoctorById(id: number) {
@@ -398,7 +398,7 @@ export async function getFarmerById(id: number) {
         };
     }
 
-    return { status: true, data: result.data };
+    return { status: true, data: result?.data ?? result };
 }
 
 export async function deleteFarmerById(id: number) {

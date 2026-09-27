@@ -67,14 +67,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [
-      {
-        url: "/gobaadi-logo-rounded.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    shortcut: "/gobaadi-logo-rounded.svg",
-    apple: "/gobaadi-logo-rounded.svg",
+    icon: "/hero_gobadi_logo.ico",
+    shortcut: "/hero_gobadi_logo.ico",
+    apple: "/hero_gobadi_logo.webp",
   },
   manifest: "/site.webmanifest",
   openGraph: {

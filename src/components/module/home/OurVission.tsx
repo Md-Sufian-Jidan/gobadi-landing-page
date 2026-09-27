@@ -13,7 +13,7 @@ const features = [
         icon: iconEcosystem,
         iconAlt: "Animal Care Ecosystem",
         title: "Animal Care Ecosystem",
-        description: "A complete platform for Animal health, care guidance, and daily wellbeing support.",
+        description: "A complete platform for pet health, care guidance, and daily wellbeing support.",
         className: "",
     },
     {

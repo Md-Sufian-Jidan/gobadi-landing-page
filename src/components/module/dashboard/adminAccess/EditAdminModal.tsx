@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, toApiDesignation, toUiDesignation } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import {
     Dialog,
@@ -131,14 +131,19 @@ export default function EditAdminModal({
             const result = await getAdmin(String(adminId!))
             if (result.status && result.data) {
                 const a = result.data
+                const uiDesignation = toUiDesignation(a.designation)
                 setForm({
                     name: a.name || "",
                     email: a.email || "",
                     password: "",
                     role: a.role || "admin",
-                    designation: a.designation || "founder",
+                    designation: (DESIGNATION_OPTIONS as readonly string[]).includes(uiDesignation)
+                        ? (uiDesignation as AdminDesignation)
+                        : "founder",
                     status: a.status || "active",
                 })
+            } else {
+                toast.error(result.message || "Failed to load admin")
             }
             setLoading(false)
         }
@@ -174,7 +179,7 @@ export default function EditAdminModal({
             name: form.name.trim(),
             email: form.email.trim(),
             role: form.role,
-            designation: form.designation,
+            designation: toApiDesignation(form.designation),
             status: form.status,
         }
         if (form.password) {

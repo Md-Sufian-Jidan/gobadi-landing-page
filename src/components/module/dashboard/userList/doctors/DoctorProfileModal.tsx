@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckCircle2, Mail, Phone, Calendar, UserCheck } from "lucide-react"
+import { CheckCircle2, ClipboardList, Clock, Mail, MapPin, Phone, Calendar, Shield, UserCheck } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -50,7 +50,7 @@ export default function DoctorProfileModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 showCloseButton={true}
-                className="max-w-[520px] w-[calc(100vw-2rem)] p-0 rounded-[28px] sm:rounded-[32px] bg-white border border-[#EAE5DD] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden font-sans"
+                className="max-w-[520px] w-[calc(100vw-2rem)] max-h-[90vh] p-0 rounded-[28px] sm:rounded-[32px] bg-white border border-[#EAE5DD] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-y-auto font-sans"
             >
                 {/* Header Banner */}
                 <div className="relative bg-gradient-to-b from-[#F0F7FF] via-[#E0EDFF] to-[#D0E2FF] px-8 pt-8 pb-14 border-b border-[#C0D8FF]">
@@ -110,6 +110,20 @@ export default function DoctorProfileModal({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
                                 <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
+                                    <Shield className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[10px] font-bold text-[#8C877E] uppercase tracking-wider">
+                                        Role
+                                    </span>
+                                    <span className="text-sm font-semibold text-[#1A1A1A] capitalize">
+                                        {doctor.role ? doctor.role.replace("_", " ") : "N/A"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
                                     <Mail className="w-4 h-4" />
                                 </div>
                                 <div className="flex flex-col min-w-0">
@@ -132,6 +146,62 @@ export default function DoctorProfileModal({
                                     </span>
                                     <span className="text-sm font-semibold text-[#1A1A1A] truncate">
                                         {doctor.phone || "N/A"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
+                                    <MapPin className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[10px] font-bold text-[#8C877E] uppercase tracking-wider">
+                                        Address
+                                    </span>
+                                    <span className="text-sm font-semibold text-[#1A1A1A] truncate" title={doctor.address || "N/A"}>
+                                        {doctor.address || "N/A"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
+                                    <Clock className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[10px] font-bold text-[#8C877E] uppercase tracking-wider">
+                                        Pending Appointments
+                                    </span>
+                                    <span className="text-sm font-semibold text-[#1A1A1A]">
+                                        {doctor.pendingAppointments || "N/A"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[10px] font-bold text-[#8C877E] uppercase tracking-wider">
+                                        Completed Appointments
+                                    </span>
+                                    <span className="text-sm font-semibold text-[#1A1A1A]">
+                                        {doctor.completedAppointments || "N/A"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3.5 p-4 bg-[#FAFAFA]/90 hover:bg-white hover:border-[#2563EB]/30 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] transition-all duration-200 rounded-[20px] border border-[#EFECE6] group">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-[14px] bg-white border border-[#DCE8F8] shadow-2xs shrink-0 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white group-hover:border-[#2563EB] transition-all duration-200">
+                                    <ClipboardList className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[10px] font-bold text-[#8C877E] uppercase tracking-wider">
+                                        Total Appointments
+                                    </span>
+                                    <span className="text-sm font-semibold text-[#1A1A1A]">
+                                        {doctor.totalAppointments || "N/A"}
                                     </span>
                                 </div>
                             </div>
@@ -181,7 +251,7 @@ export default function DoctorProfileModal({
                     {/* Loading skeleton for grid */}
                     {loading && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {[1, 2, 3, 4].map((i) => (
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
                                 <div
                                     key={i}
                                     className="flex items-center gap-3.5 p-4 bg-[#FAFAFA] rounded-[20px] border border-[#EFECE6]"

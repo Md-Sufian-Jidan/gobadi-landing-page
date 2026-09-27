@@ -5,6 +5,7 @@ import {
     Bar,
     BarChart,
     CartesianGrid,
+    ResponsiveContainer,
     XAxis,
     YAxis,
 } from "recharts";
@@ -25,10 +26,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import filtericon from "@/assets/filter-icon.svg"
-import filterarrowicon from "@/assets/filter-arrow-icon.svg"
+import filtericon from "@/assets/filter-icon.svg";
+import filterarrowicon from "@/assets/filter-arrow-icon.svg";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { mapPeriod, periodLabel } from "@/lib/period";
 
 const chartConfig = {
     count: {
@@ -42,24 +44,31 @@ interface Props {
 }
 
 export default function RegisteredAnimalChart({ period }: Props) {
-    const [filter, setFilter] = useState("last 7 days");
+    const [filter, setFilter] = useState(periodLabel(period));
+    const requestPeriod = mapPeriod(filter);
+
+    useEffect(() => {
+        setFilter(periodLabel(period));
+    }, [period]);
 
     const { data: result, isLoading: loading } = useQuery({
-        queryKey: queryKeys.registeredAnimals(filter),
-        queryFn: () => getRegisteredAnimals(filter as Period),
+        queryKey: queryKeys.registeredAnimals(requestPeriod),
+        queryFn: () => getRegisteredAnimals(requestPeriod),
     });
 
     const chartData = result?.status && result.data ? result.data.chartData : [];
     const summary = result?.status && result.data ? result.data.summary : { total: 0, changePercent: 0, isPositive: true };
-    const isDataEmpty = !loading && (summary.total === 0 || chartData.length === 0 || chartData.every((item) => item.count === 0));
+    const isDataEmpty = !loading && summary.total === 0 && chartData.every((item) => item.count === 0);
 
     const maxVal = chartData.length > 0 ? Math.max(...chartData.map((d) => d.count)) : 0;
+    const yMax = maxVal > 400 ? Math.ceil(maxVal / 100) * 100 : 400;
+    const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax].map(Math.round);
 
     return (
-        <div className="w-full h-80 rounded-[24px] border border-[#EAE5DD] bg-white p-3 shadow-xs flex flex-col justify-between">
+        <div className="w-full h-80 rounded-[24px] border border-[#EAE5DD] bg-white p-5 sm:p-6 shadow-xs flex flex-col justify-between relative overflow-hidden font-sans">
             {/* Header Section */}
             <div className="flex items-start justify-between">
-                <h3 className="text-lg font-bold leading-tight text-[#1A1A1A] font-display">
+                <h3 className="text-base sm:text-lg font-bold leading-tight text-[#1A1A1A] font-display">
                     Registered
                     <br />
                     Animal
@@ -67,7 +76,7 @@ export default function RegisteredAnimalChart({ period }: Props) {
 
                 {/* Dropdown Filter */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-[10px] border border-[#E5E0D8] text-xs font-semibold text-[#525252] hover:text-[#1A1A1A] transition-colors cursor-pointer outline-none">
+                    <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-[10px] border border-[#E5E0D8] text-xs font-semibold text-[#525252] hover:text-[#1A1A1A] transition-colors cursor-pointer outline-none shrink-0">
                         <Image src={filtericon} alt="Filter Icon" className="w-3.5 h-3.5" />
                         <span>{filter}</span>
                         <Image src={filterarrowicon} alt="Filter Icon" className="w-5 h-5" />
@@ -84,11 +93,10 @@ export default function RegisteredAnimalChart({ period }: Props) {
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
-
             </div>
 
             {/* Metrics Row */}
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2">
                 <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1A1A1A] font-display">
                     {loading ? "0" : summary.total}
                 </span>
@@ -108,7 +116,7 @@ export default function RegisteredAnimalChart({ period }: Props) {
             </div>
 
             {/* Chart Section */}
-            <div className="w-full h-56 mt-4 relative">
+            <div className="w-full h-52 mt-2 relative">
                 {isDataEmpty && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[1px] z-20 rounded-[16px]">
                         <span className="text-xs font-semibold text-[#8C857B] bg-[#F7F4EE] px-3.5 py-1.5 rounded-full border border-[#EAE5DD] shadow-xs">
@@ -117,44 +125,46 @@ export default function RegisteredAnimalChart({ period }: Props) {
                     </div>
                 )}
                 <ChartContainer config={chartConfig} className="h-full w-full">
-                    <BarChart
-                        data={chartData}
-                        margin={{ top: 10, right: 0, left: -24, bottom: 0 }}
-                        barSize={8}
-                    >
-                        <CartesianGrid
-                            vertical={false}
-                            stroke="#F3F3F3"
-                            strokeDasharray="0"
-                        />
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 12, right: 8, left: -22, bottom: 0 }}
+                            barSize={7}
+                        >
+                            <CartesianGrid
+                                vertical={false}
+                                stroke="#F0ECE6"
+                                strokeDasharray="0"
+                            />
 
-                        <YAxis
-                            domain={[0, maxVal * 1.15 || 400]}
-                            ticks={maxVal > 0 ? undefined : [0, 100, 200, 300, 400]}
-                            axisLine={false}
-                            tickLine={false}
-                            className="text-[11px] font-medium fill-[#A39E93]"
-                        />
+                            <YAxis
+                                domain={[0, yMax]}
+                                ticks={yTicks}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: "#A39E93", fontSize: 11, fontWeight: 500 }}
+                            />
 
-                        <XAxis
-                            dataKey="day"
-                            axisLine={false}
-                            tickLine={false}
-                            tickMargin={12}
-                            className="text-[12px] font-medium fill-[#A39E93]"
-                        />
+                            <XAxis
+                                dataKey="day"
+                                axisLine={false}
+                                tickLine={false}
+                                tickMargin={10}
+                                tick={{ fill: "#A39E93", fontSize: 11, fontWeight: 500 }}
+                            />
 
-                        <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                        />
+                            <ChartTooltip
+                                cursor={false}
+                                content={<ChartTooltipContent hideLabel />}
+                            />
 
-                        <Bar
-                            dataKey="count"
-                            fill="var(--color-count)"
-                            radius={[10, 10, 10, 10]}
-                        />
-                    </BarChart>
+                            <Bar
+                                dataKey="count"
+                                fill="#C15C2B"
+                                radius={[6, 6, 6, 6]}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </ChartContainer>
             </div>
         </div>

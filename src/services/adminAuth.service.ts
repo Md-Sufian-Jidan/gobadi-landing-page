@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import type { AdminProfile } from "@/types/auth.type";
 
 const getApiBaseUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL;
@@ -13,36 +14,68 @@ const getApiBaseUrl = () => {
 const ADMIN_ACCESS_TOKEN = "accessToken";
 const ADMIN_REFRESH_TOKEN = "refreshToken";
 
+type ApiAuthResponse = {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  data?: { accessToken?: string; refreshToken?: string } & Record<string, unknown>;
+} | null;
+
 export async function adminLoginAction(data: { email: string; password: string }) {
-  const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  const result = await res.json();
+  try {
+    const API_BASE_URL = getApiBaseUrl();
 
-  if (!res.ok) {
-    return { status: false, message: result.message || "Login failed" };
+    const res = await fetch(`${API_BASE_URL}/dashboard/admins/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    let result: ApiAuthResponse = null;
+    try {
+      result = await res.json();
+    } catch {
+      result = null;
+    }
+
+    if (!res.ok) {
+      return { status: false, message: result?.message || "Login failed" };
+    }
+
+    const payload = result?.data ?? result;
+
+    if (!payload?.accessToken || !payload?.refreshToken) {
+      return {
+        status: false,
+        message:
+          result?.message ||
+          `Unexpected login response (keys: ${Object.keys(result ?? {}).join(", ") || "empty"})`,
+      };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set(ADMIN_ACCESS_TOKEN, payload.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour
+      path: "/",
+    });
+    cookieStore.set(ADMIN_REFRESH_TOKEN, payload.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
+
+    return { status: true, data: payload };
+  } catch (error) {
+    console.error("[adminLoginAction] failed:", error);
+    return { status: false, message: "Could not reach the login service. Please try again." };
   }
-
-  const cookieStore = await cookies();
-  cookieStore.set(ADMIN_ACCESS_TOKEN, result.data.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60, // 1 hour
-    path: "/",
-  });
-  cookieStore.set(ADMIN_REFRESH_TOKEN, result.data.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: "/",
-  });
-
-  return { status: true, data: result.data };
 }
 
 export async function adminLogoutAction() {
@@ -51,7 +84,7 @@ export async function adminLogoutAction() {
   try {
     const accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN)?.value;
     const refreshToken = cookieStore.get(ADMIN_REFRESH_TOKEN)?.value;
-    await fetch(`${API_BASE_URL}/admins/logout`, {
+    await fetch(`${API_BASE_URL}/dashboard/admins/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -67,7 +100,11 @@ export async function adminLogoutAction() {
   }
 }
 
-export async function getAdminProfile() {
+export type AdminProfileResult =
+  | { status: true; data: AdminProfile; error: null }
+  | { status: false; data: null; message: string };
+
+export async function getAdminProfile(): Promise<AdminProfileResult> {
   try {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN)?.value;
@@ -76,7 +113,7 @@ export async function getAdminProfile() {
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    let res = await fetch(`${API_BASE_URL}/admins/profile`, {
+    let res = await fetch(`${API_BASE_URL}/dashboard/admins/profile`, {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
@@ -91,24 +128,45 @@ export async function getAdminProfile() {
         return { data: null, message: "Session expired. Please log in again.", status: false };
       }
       accessToken = refreshed.accessToken;
-      res = await fetch(`${API_BASE_URL}/admins/profile`, {
+      res = await fetch(`${API_BASE_URL}/dashboard/admins/profile`, {
         headers: { Authorization: `Bearer ${accessToken}` },
         cache: "no-store",
       });
     }
 
     if (!res.ok) {
-      return { data: null, message: "No active session", status: false };
+      let message = "Failed to load profile";
+      try {
+        const err = await res.json();
+        message = err?.message || message;
+      } catch {
+        // non-JSON error body — keep the default message
+      }
+      if (res.status === 401 || res.status === 403) {
+        cookieStore.delete(ADMIN_ACCESS_TOKEN);
+        cookieStore.delete(ADMIN_REFRESH_TOKEN);
+        message = "Session expired. Please log in again.";
+      }
+      return { data: null, message, status: false };
     }
 
     const result = await res.json();
-    return { data: result.data, error: null, status: true };
-  } catch {
+    // The endpoint returns the admin object raw; tolerate a `{ data }` envelope too.
+    const payload = result?.data ?? result;
+    return { data: payload, error: null, status: true };
+  } catch (error) {
+    console.error("[getAdminProfile] failed:", error);
     return { data: null, message: "Failed to fetch session data", status: false };
   }
 }
 
-export async function updateAdminProfileAction(formData: FormData) {
+export type UpdateAdminProfileResult =
+  | { status: true; data: AdminProfile; message: string }
+  | { status: false; message: string; data?: undefined };
+
+export async function updateAdminProfileAction(
+  formData: FormData
+): Promise<UpdateAdminProfileResult> {
   try {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN)?.value;
@@ -117,7 +175,7 @@ export async function updateAdminProfileAction(formData: FormData) {
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    let res = await fetch(`${API_BASE_URL}/admins/profile`, {
+    let res = await fetch(`${API_BASE_URL}/dashboard/admins/profile`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${accessToken}` },
       body: formData,
@@ -132,7 +190,7 @@ export async function updateAdminProfileAction(formData: FormData) {
         return { status: false, message: "Session expired. Please log in again." };
       }
       accessToken = refreshed.accessToken;
-      res = await fetch(`${API_BASE_URL}/admins/profile`, {
+      res = await fetch(`${API_BASE_URL}/dashboard/admins/profile`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${accessToken}` },
         body: formData,
@@ -145,56 +203,72 @@ export async function updateAdminProfileAction(formData: FormData) {
       return { status: false, message: result.message || "Failed to update profile" };
     }
 
-    return { status: true, message: result.message, data: result.data };
-  } catch {
+    // The endpoint returns the updated admin object raw; tolerate a `{ data }` envelope too.
+    return { status: true, message: result.message || "Profile updated successfully", data: result.data ?? result };
+  } catch (error) {
+    console.error("[updateAdminProfileAction] failed:", error);
     return { status: false, message: "Failed to update profile" };
   }
 }
 
 export async function adminRefreshAccessToken(): Promise<{ success: boolean; accessToken?: string }> {
-  const cookieStore = await cookies();
-  const refreshToken = cookieStore.get(ADMIN_REFRESH_TOKEN)?.value;
-  if (!refreshToken) {
-    return { success: false };
-  }
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(ADMIN_REFRESH_TOKEN)?.value;
+    if (!refreshToken) {
+      return { success: false };
+    }
 
-  const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
+    const API_BASE_URL = getApiBaseUrl();
+    const res = await fetch(`${API_BASE_URL}/dashboard/admins/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
 
-  if (!res.ok) {
-    return { success: false };
-  }
+    if (!res.ok) {
+      return { success: false };
+    }
 
-  const result = await res.json();
-  if (result.data?.accessToken) {
-    cookieStore.set(ADMIN_ACCESS_TOKEN, result.data.accessToken, {
+    let result: ApiAuthResponse = null;
+    try {
+      result = await res.json();
+    } catch {
+      return { success: false };
+    }
+
+    const payload = result?.data ?? result;
+    if (!payload?.accessToken) {
+      return { success: false };
+    }
+
+    cookieStore.set(ADMIN_ACCESS_TOKEN, payload.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60,
       path: "/",
     });
-  }
-  if (result.data?.refreshToken) {
-    cookieStore.set(ADMIN_REFRESH_TOKEN, result.data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
-  }
+    if (payload.refreshToken) {
+      cookieStore.set(ADMIN_REFRESH_TOKEN, payload.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
 
-  return { success: true, accessToken: result.data?.accessToken };
+    return { success: true, accessToken: payload.accessToken };
+  } catch (error) {
+    console.error("[adminRefreshAccessToken] failed:", error);
+    return { success: false };
+  }
 }
 
 export async function adminForgotPasswordAction(email: string) {
   const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/forgot-password`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/admins/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -211,7 +285,7 @@ export async function adminForgotPasswordAction(email: string) {
 
 export async function adminSendOtpAction(email: string, purpose: "verify" | "reset" = "verify") {
   const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/send-otp`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/admins/send-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, purpose }),
@@ -228,7 +302,7 @@ export async function adminSendOtpAction(email: string, purpose: "verify" | "res
 
 export async function adminVerifyOtpAction(email: string, code: string, purpose: "verify" | "reset" = "verify") {
   const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/verify-otp`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/admins/verify-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code, purpose }),
@@ -264,7 +338,7 @@ export async function adminResetPasswordAction(newPassword: string) {
   }
 
   const API_BASE_URL = getApiBaseUrl();
-  const res = await fetch(`${API_BASE_URL}/admins/reset-password`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/admins/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resetToken, newPassword }),

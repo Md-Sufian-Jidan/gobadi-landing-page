@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar } from "@/components/ui/avatar"
 import { getAdmin } from "@/services/admin.service"
+import { toUiDesignation } from "@/lib/utils"
 import type { Admin } from "@/types/admin.type"
 
 interface AdminDetailModalProps {
@@ -142,7 +143,7 @@ export default function AdminDetailModal({
                                         Designation
                                     </span>
                                     <span className="text-sm font-semibold text-[#1A1A1A] capitalize">
-                                        {admin.designation || "N/A"}
+                                        {admin.designation ? toUiDesignation(admin.designation) : "N/A"}
                                     </span>
                                 </div>
                             </div>

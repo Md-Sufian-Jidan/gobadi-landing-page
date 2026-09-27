@@ -196,7 +196,7 @@ export default function AnimalListTable({
                             <Stethoscope className="w-3.5 h-3.5 text-[#525252]" />
                             <span>View Doctor</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+                        {/* <DropdownMenuItem
                             variant="destructive"
                             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer"
                             onClick={() => {
@@ -206,7 +206,7 @@ export default function AnimalListTable({
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Delete Animal</span>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                     </DropdownMenuContent>
                 </DropdownMenu>
             ),

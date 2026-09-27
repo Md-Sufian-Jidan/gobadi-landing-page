@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { getAdmins, toggleAdminStatus } from "@/services/admin.service"
+import { toUiDesignation } from "@/lib/utils"
 import type { Admin } from "@/types/admin.type"
 import { useEffect, useMemo, useState } from "react"
 import AdminDetailModal from "./AdminDetailModal"
@@ -135,7 +136,7 @@ export default function AdminTable({
             header: "Designation",
             align: "center",
             cell: (item) => (
-                <span className="text-primary text-sm font-semibold capitalize">{item.designation}</span>
+                <span className="text-primary text-sm font-semibold capitalize">{toUiDesignation(item.designation)}</span>
             ),
         },
         {

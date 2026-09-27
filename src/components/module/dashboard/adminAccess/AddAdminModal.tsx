@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, toApiDesignation } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import {
     Dialog,
@@ -144,7 +144,7 @@ export default function AddAdminModal({ open, onOpenChange, onAdd }: AddAdminMod
             email: form.email.trim(),
             password: form.password,
             role: form.role,
-            designation: form.designation,
+            designation: toApiDesignation(form.designation),
             status: form.status,
         })
         setSubmitting(false)

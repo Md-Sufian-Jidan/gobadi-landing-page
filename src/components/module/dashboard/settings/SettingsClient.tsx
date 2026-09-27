@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, Eye, EyeOff, Camera, Loader2, LogOut } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Camera, Loader2, LogOut, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -22,71 +23,90 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getAdminProfile, adminLogoutAction, updateAdminProfileAction } from "@/services/adminAuth.service";
-import type { AdminProfile } from "@/types/auth.type";
+import { adminLogoutAction, updateAdminProfileAction } from "@/services/adminAuth.service";
+import { useAdminProfile } from "@/hooks/useAdminProfile";
+import { queryKeys } from "@/lib/queryKeys";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 const COUNTRIES = [
-    { code: "DE", flag: "🇩🇪", label: "Germany (+49)" },
-    { code: "BD", flag: "🇧🇩", label: "Bangladesh (+880)" },
-    { code: "US", flag: "🇺🇸", label: "United States (+1)" },
-    { code: "UK", flag: "🇬🇧", label: "United Kingdom (+44)" },
+    { code: "DE", flag: "🇩🇪", label: "Germany (+49)", dial: "+49" },
+    { code: "BD", flag: "🇧🇩", label: "Bangladesh (+880)", dial: "+880" },
+    { code: "US", flag: "🇺🇸", label: "United States (+1)", dial: "+1" },
+    { code: "UK", flag: "🇬🇧", label: "United Kingdom (+44)", dial: "+44" },
 ];
 
-const getImageUrl = (url?: string) => {
-    if (!url) return undefined;
-    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:")) return url;
-    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
-    return `${apiBase}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+/** Splits "+8801712345678" into a known dial code and the local number. */
+function parsePhone(value?: string | null): { dial: string; number: string } {
+    const trimmed = (value || "").trim();
+    if (!trimmed) return { dial: "", number: "" };
+
+    const match = [...COUNTRIES]
+        .sort((a, b) => b.dial.length - a.dial.length)
+        .find((c) => trimmed.startsWith(c.dial));
+
+    if (match) {
+        return { dial: match.dial, number: trimmed.slice(match.dial.length).replace(/[^\d]/g, "") };
+    }
+    return { dial: "", number: trimmed.replace(/[^\d]/g, "") };
+}
+
+/** Builds the international number that gets sent to the API. */
+function formatPhone(raw: string, dial: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("+")) return `+${trimmed.replace(/[^\d]/g, "")}`;
+
+    const digits = trimmed.replace(/[^\d]/g, "");
+    if (!digits) return "";
+    if (!dial) return `+${digits}`;
+
+    const local = digits.startsWith("0") ? digits.slice(1) : digits;
+    return `${dial}${local}`;
+}
 
 export default function SettingsClient() {
     const router = useRouter();
-    const [admin, setAdmin] = useState<AdminProfile | null>(null);
-    const [firstName, setFirstName] = useState<string>("");
-    const [lastName, setLastName] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [phone, setPhone] = useState<string>("");
+    const queryClient = useQueryClient();
+    const { data: admin, isLoading, isError, error, refetch } = useAdminProfile();
+
+    // Editable fields are kept as explicit overrides: anything untouched falls
+    // back to the profile returned by the API (no effect needed to sync).
+    const [firstNameEdit, setFirstNameEdit] = useState<string | null>(null);
+    const [lastNameEdit, setLastNameEdit] = useState<string | null>(null);
+    const [phoneEdit, setPhoneEdit] = useState<{ raw: string; dial: string } | null>(null);
     const [password, setPassword] = useState<string>("");
     const [confirmPassword, setConfirmPassword] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-    const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
-    const [role, setRole] = useState<string>("");
-    const [designation, setDesignation] = useState<string>("");
-    const [profileImage, setProfileImage] = useState<string>("");
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
     const [saving, setSaving] = useState<boolean>(false);
     const [loggingOut, setLoggingOut] = useState<boolean>(false);
 
-    useEffect(() => {
-        async function fetchProfile() {
-            try {
-                setLoading(true);
-                const result = await getAdminProfile();
-                if (result.status && result.data) {
-                    const a = result.data as AdminProfile;
-                    setAdmin(a);
-                    if (a.name) {
-                        const parts = a.name.trim().split(/\s+/);
-                        setFirstName(parts[0] || "");
-                        setLastName(parts.slice(1).join(" ") || "");
-                    }
-                    if (a.email) setEmail(a.email);
-                    if (a.phone) setPhone(a.phone);
-                    if (a.role) setRole(a.role);
-                    if (a.designation) setDesignation(a.designation);
-                    if (a.avatar) setProfileImage(a.avatar);
-                }
-            } catch (error) {
-                console.error("Failed to load admin profile:", error);
-                toast.error("Error loading profile details");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchProfile();
-    }, []);
+    const nameParts = (admin?.name || "").trim().split(/\s+/).filter(Boolean);
+    const serverPhone = parsePhone(admin?.phone);
+
+    const firstName = firstNameEdit ?? nameParts[0] ?? "";
+    const lastName = lastNameEdit ?? nameParts.slice(1).join(" ");
+    const phoneValue = phoneEdit ?? {
+        raw: serverPhone.number,
+        dial: serverPhone.dial || COUNTRIES[0].dial,
+    };
+    const phone = phoneValue.raw;
+    const selectedCountry = COUNTRIES.find((c) => c.dial === phoneValue.dial) || COUNTRIES[0];
+
+    const email = admin?.email || "";
+    const role = admin?.role || "";
+    const designation = admin?.designation || "";
+
+    const loading = isLoading && !admin;
+    const currentName = [firstName, lastName].filter(Boolean).join(" ").trim();
+    const isDirty =
+        Boolean(admin) &&
+        (currentName !== nameParts.join(" ") ||
+            phoneEdit !== null ||
+            Boolean(password) ||
+            Boolean(selectedFile));
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -97,7 +117,7 @@ export default function SettingsClient() {
             }
             setSelectedFile(file);
             const url = URL.createObjectURL(file);
-            setProfileImage(url);
+            setPreviewUrl(url);
             toast.success("Profile picture selected! Click 'Save Changes' to update profile picture.");
         }
     };
@@ -123,6 +143,11 @@ export default function SettingsClient() {
             return;
         }
 
+        if (phone.trim() && phone.replace(/\D/g, "").length < 6) {
+            toast.error("Please enter a valid phone number");
+            return;
+        }
+
         if (password && password.length < 6) {
             toast.error("Password must be at least 6 characters");
             return;
@@ -137,35 +162,28 @@ export default function SettingsClient() {
             const formData = new FormData();
             formData.append("name", name);
             if (password) formData.append("password", password);
-            if (phone) formData.append("phone", phone);
+            if (phoneEdit) {
+                const formattedPhone = formatPhone(phoneEdit.raw, phoneEdit.dial);
+                if (formattedPhone) formData.append("phone", formattedPhone);
+            }
             if (selectedFile) formData.append("avatar", selectedFile);
 
             const result = await updateAdminProfileAction(formData);
             if (!result.status) {
                 toast.error(result.message || "Failed to update profile");
-                setSaving(false);
                 return;
             }
 
-            toast.success("Profile updated successfully");
-            if (result.data) setAdmin(result.data as AdminProfile);
+            toast.success(result.message || "Profile updated successfully");
             setSelectedFile(null);
+            setPreviewUrl(null);
             setPassword("");
             setConfirmPassword("");
+            setFirstNameEdit(null);
+            setLastNameEdit(null);
+            setPhoneEdit(null);
 
-            const refetched = await getAdminProfile();
-            if (refetched.status && refetched.data) {
-                const a = refetched.data as AdminProfile;
-                setAdmin(a);
-                if (a.name) {
-                    const parts = a.name.trim().split(/\s+/);
-                    setFirstName(parts[0] || "");
-                    setLastName(parts.slice(1).join(" ") || "");
-                }
-                if (a.avatar) setProfileImage(a.avatar);
-                if (a.phone) setPhone(a.phone);
-            }
-
+            await queryClient.invalidateQueries({ queryKey: queryKeys.adminProfile() });
             router.refresh();
         } catch (error) {
             console.error("Save error:", error);
@@ -177,15 +195,36 @@ export default function SettingsClient() {
 
     const firstChar = firstName.trim() ? firstName.trim()[0].toUpperCase() : "";
     const lastChar = lastName.trim() ? lastName.trim()[0].toUpperCase() : "";
-    const initials = `${firstChar}${lastChar}`;
+    const initials = `${firstChar}${lastChar}` || "?";
     const displayName = [firstName, lastName].filter(Boolean).join(" ");
-    const resolvedAvatarUrl = getImageUrl(profileImage);
+    const resolvedAvatarUrl = previewUrl ?? resolveAvatarUrl(admin?.avatar);
 
     if (loading) {
         return (
             <Card className="bg-[#FCFCFC] border-[#EAE5DD] shadow-xs rounded-[20px] sm:rounded-[28px] p-12 flex flex-col items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 animate-spin text-[#C15C2B] mb-3" />
                 <p className="text-sm font-medium text-[#737373]">Loading settings...</p>
+            </Card>
+        );
+    }
+
+    if (isError && !admin) {
+        return (
+            <Card className="bg-[#FCFCFC] border-[#EAE5DD] shadow-xs rounded-[20px] sm:rounded-[28px] p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
+                <AlertCircle className="w-8 h-8 text-red-500 mb-3" />
+                <p className="text-sm font-medium text-[#737373] mb-1">
+                    {error?.message || "Failed to load your profile"}
+                </p>
+                <p className="text-xs text-[#A3A3A3] mb-4">
+                    Check your connection and try again, or log in once more.
+                </p>
+                <Button
+                    onClick={() => refetch()}
+                    className="h-10 px-4 rounded-md bg-[#C15C2B] hover:bg-[#A84F23] text-white font-semibold text-sm"
+                >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry
+                </Button>
             </Card>
         );
     }
@@ -300,7 +339,7 @@ export default function SettingsClient() {
                                         id="firstName"
                                         type="text"
                                         value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
+                                        onChange={(e) => setFirstNameEdit(e.target.value)}
                                         placeholder="First Name"
                                         className="h-12 rounded-[14px] bg-white border-[#EAE5DD] text-sm text-[#1A1A1A] placeholder:text-[#A3A3A3] focus-visible:ring-0 focus-visible:border-[#1A1A1A] transition-all shadow-none px-4"
                                     />
@@ -313,7 +352,7 @@ export default function SettingsClient() {
                                         id="lastName"
                                         type="text"
                                         value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
+                                        onChange={(e) => setLastNameEdit(e.target.value)}
                                         placeholder="Last Name"
                                         className="h-12 rounded-[14px] bg-white border-[#EAE5DD] text-sm text-[#1A1A1A] placeholder:text-[#A3A3A3] focus-visible:ring-0 focus-visible:border-[#1A1A1A] transition-all shadow-none px-4"
                                     />
@@ -358,7 +397,7 @@ export default function SettingsClient() {
                                             {COUNTRIES.map((country) => (
                                                 <DropdownMenuItem
                                                     key={country.code}
-                                                    onClick={() => setSelectedCountry(country)}
+                                                    onClick={() => setPhoneEdit({ raw: phone, dial: country.dial })}
                                                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer transition-colors ${selectedCountry.code === country.code
                                                         ? "bg-[#F5F2EC] text-[#1A1A1A] font-semibold"
                                                         : "text-[#525252] hover:bg-[#F5F2EC] hover:text-[#1A1A1A]"
@@ -378,7 +417,7 @@ export default function SettingsClient() {
                                         type="tel"
                                         value={phone}
                                         placeholder="Phone number"
-                                        onChange={(e) => setPhone(e.target.value)}
+                                        onChange={(e) => setPhoneEdit({ raw: e.target.value, dial: selectedCountry.dial })}
                                         className="w-full bg-transparent text-sm text-[#1A1A1A] placeholder:text-[#A3A3A3] outline-none border-none p-0 focus:outline-none focus:ring-0"
                                     />
                                 </div>
@@ -460,7 +499,7 @@ export default function SettingsClient() {
                                 <Button
                                     type="button"
                                     onClick={handleSave}
-                                    disabled={saving}
+                                    disabled={saving || !isDirty}
                                     className="h-11 px-6 rounded-md bg-[#C15C2B] hover:bg-[#A84F23] text-white font-semibold text-sm transition-all shadow-none cursor-pointer flex items-center gap-2 disabled:opacity-50"
                                 >
                                     {saving ? (
