@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://gobadi.vercel.app/" target="_blank"><img src="https://img.shields.io/badge/Live%20Demo-gobadi.vercel.app-C1652F?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" /></a>
+  <a href="https://www.gobaadi.com" target="_blank"><img src="https://img.shields.io/badge/Live%20Demo-gobadi.vercel.app-C1652F?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" /></a>
   <a href="https://github.com/Md-Sufian-Jidan/gobadi" target="_blank"><img src="https://img.shields.io/badge/GitHub-Md--Sufian--Jidan%2Fgobadi-171717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
   <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 16" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
@@ -32,7 +32,7 @@ This repository is the **public-facing website** — a polished, responsive land
 
 ## Live Site
 
-**[https://gobadi.vercel.app/](https://gobadi.vercel.app/)**
+**[https://www.gobaadi.com](https://www.gobaadi.com)**
 
 ---
 
@@ -211,7 +211,7 @@ To deploy your own copy:
 3. Import your forked repository
 4. Click **Deploy** — Vercel handles everything else automatically
 
-The `NEXT_PUBLIC_API_URL` environment variable is used for generating absolute URLs in metadata (Open Graph, Twitter cards). Set this to your own domain in Vercel's environment variable settings.
+The `NEXT_PUBLIC_SITE_URL` environment variable is used for generating absolute URLs in metadata (canonical, Open Graph, Twitter cards). Set this to your own domain in Vercel's environment variable settings. `NEXT_PUBLIC_API_URL` must point to the backend API.
 
 ---
 
@@ -223,7 +223,7 @@ Have a question, a partnership idea, or just want to say hello?
 - **Phone:** +8801911418977
 - **Office:** Road# 9, House# 5, Lane# 3, Mirpur 11/a, Dhaka, 1216, Bangladesh
 
-Or reach out directly through the [contact form on the website](https://gobadi.vercel.app/#contact).
+Or reach out directly through the [contact form on the website](https://www.gobaadi.com/#contact).
 
 ---
 

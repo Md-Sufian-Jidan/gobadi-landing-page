@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Noto_Sans_Bengali, Inter, Audiowide } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/Providers";
 
@@ -26,7 +25,7 @@ const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.gobaadi.com";
 const siteName = "Gobadi";
 const siteDescription = "Gobadi is an AI-powered digital platform connecting farmers, veterinarians, and trusted livestock service providers in one place.";
 
@@ -69,7 +68,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/hero_gobadi_logo.ico",
     shortcut: "/hero_gobadi_logo.ico",
-    apple: "/hero_gobadi_logo.webp",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
   openGraph: {
@@ -81,10 +80,10 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/assets/gobadi_logo.webp",
+        url: "/assets/gobadi-og.png",
         width: 1200,
         height: 630,
-        alt: `${siteName} logo`,
+        alt: "Gobadi — AI-Powered Livestock Platform",
       },
     ],
   },
@@ -92,7 +91,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${siteName} — AI-Powered Livestock Platform`,
     description: siteDescription,
-    images: ["/assets/gobadi_logo.webp"],
+    images: ["/assets/gobadi-og.png"],
   },
 };
 

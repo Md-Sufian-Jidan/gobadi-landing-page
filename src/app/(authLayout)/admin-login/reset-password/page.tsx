@@ -2,7 +2,12 @@ import Image from "next/image";
 import loginImage from "@/assets/login-image.svg";
 import AdminResetPasswordForm from "@/components/module/auth/adminLogin/AdminResetPasswordForm";
 
-export default function AdminResetPasswordPage() {
+export default async function AdminResetPasswordPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ email?: string }>;
+}) {
+    const { email } = await searchParams;
     return (
         <div className="h-screen w-full p-3 sm:p-5 lg:p-6 bg-[#F3F2EC] flex items-center justify-center">
             <div className="w-full max-w-[1500px] h-full flex flex-col lg:flex-row gap-4 sm:gap-6">
@@ -14,7 +19,7 @@ export default function AdminResetPasswordPage() {
                             Reset <span className="font-bold">GOBAADI</span> password
                         </h1>
 
-                        <AdminResetPasswordForm />
+                        <AdminResetPasswordForm email={email ?? ""} />
                     </div>
                 </div>
 

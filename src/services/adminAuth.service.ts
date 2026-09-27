@@ -314,10 +314,24 @@ export async function adminVerifyOtpAction(email: string, code: string, purpose:
     return { status: false, message: result.message || "Failed to verify OTP" };
   }
 
-  // If purpose is reset, store the resetToken in a cookie
-  if (purpose === "reset" && result.data?.resetToken) {
+  const payload = result?.data ?? result;
+
+  // If purpose is reset, store the resetToken in a cookie.
+  // The token may be nested under `data` or returned at the top level of the body.
+  if (purpose === "reset") {
+    const resetToken =
+      (payload as { resetToken?: string } | null)?.resetToken ??
+      (result as { resetToken?: string } | null)?.resetToken;
+
+    if (!resetToken) {
+      return {
+        status: false,
+        message: "No reset token was issued. Please request a new code.",
+      };
+    }
+
     const cookieStore = await cookies();
-    cookieStore.set("adminResetToken", result.data.resetToken, {
+    cookieStore.set("adminResetToken", resetToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -326,7 +340,7 @@ export async function adminVerifyOtpAction(email: string, code: string, purpose:
     });
   }
 
-  return { status: true, data: result.data };
+  return { status: true, data: payload };
 }
 
 export async function adminResetPasswordAction(newPassword: string) {

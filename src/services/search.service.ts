@@ -73,5 +73,15 @@ export async function globalSearch(query: string) {
     };
   }
 
-  return { status: true, data: result.data as SearchResults };
+  const data = (result?.data ?? result) as Partial<SearchResults> | undefined;
+
+  return {
+    status: true,
+    data: {
+      farmers: data?.farmers ?? [],
+      doctors: data?.doctors ?? [],
+      animals: data?.animals ?? [],
+      notifications: data?.notifications ?? [],
+    },
+  };
 }

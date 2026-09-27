@@ -21,6 +21,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export default function AdminForgotPasswordForm() {
     const router = useRouter();
     const [sent, setSent] = useState(false);
+    const [sentEmail, setSentEmail] = useState("");
 
     const {
         register,
@@ -34,6 +35,7 @@ export default function AdminForgotPasswordForm() {
         try {
             const res = await adminForgotPasswordAction(data.email);
             if (res.status) {
+                setSentEmail(data.email);
                 setSent(true);
                 toast.success("Reset code sent to your email!");
             } else {
@@ -55,11 +57,15 @@ export default function AdminForgotPasswordForm() {
                 </div>
                 <h2 className="text-lg font-semibold text-[#1A1A1A]">Check your email</h2>
                 <p className="text-sm text-[#737373]">
-                    We&apos;ve sent a verification code to your email address. Please check your inbox.
+                    We&apos;ve sent a verification code to <span className="font-medium text-[#525252]">{sentEmail}</span>. Please check your inbox.
                 </p>
                 <Button
                     type="button"
-                    onClick={() => router.push("/admin-login/reset-password")}
+                    onClick={() =>
+                        router.push(
+                            `/admin-login/reset-password?email=${encodeURIComponent(sentEmail)}`
+                        )
+                    }
                     className="mt-2 h-11 w-full rounded-xl bg-[#242424] hover:bg-[#1A1A1A] text-white text-sm font-medium transition-all shadow-none cursor-pointer"
                 >
                     Enter Reset Code

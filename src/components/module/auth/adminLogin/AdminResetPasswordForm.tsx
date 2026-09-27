@@ -27,10 +27,9 @@ const resetPasswordSchema = z.object({
 type VerifyOtpFormData = z.infer<typeof verifyOtpSchema>;
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export default function AdminResetPasswordForm() {
+export default function AdminResetPasswordForm({ email }: { email: string }) {
     const router = useRouter();
     const [step, setStep] = useState<"otp" | "password">("otp");
-    const [resetToken, setResetToken] = useState<string>("");
     const [showPassword, setShowPassword] = useState(false);
 
     const otpForm = useForm<VerifyOtpFormData>({
@@ -42,10 +41,15 @@ export default function AdminResetPasswordForm() {
     });
 
     const onVerifyOtp = async (data: VerifyOtpFormData) => {
+        if (!email) {
+            toast.error("Missing account email. Please request a reset code again.");
+            router.push("/admin-login/forgot-password");
+            return;
+        }
+
         try {
-            const res = await adminVerifyOtpAction("", data.code, "reset");
+            const res = await adminVerifyOtpAction(email, data.code, "reset");
             if (res.status) {
-                setResetToken(res.data?.resetToken || "");
                 setStep("password");
                 toast.success("Code verified successfully!");
             } else {
@@ -146,7 +150,8 @@ export default function AdminResetPasswordForm() {
             <div className="text-center mb-2">
                 <h2 className="text-lg font-semibold text-[#1A1A1A]">Enter Verification Code</h2>
                 <p className="text-sm text-[#737373] mt-1">
-                    Enter the 4-digit code sent to your email.
+                    Enter the 4-digit code sent to{" "}
+                    <span className="font-medium text-[#525252]">{email || "your email"}</span>.
                 </p>
             </div>
 
