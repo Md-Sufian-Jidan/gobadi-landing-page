@@ -1,12 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import FarmersTable from "@/components/module/dashboard/userList/farmers/FarmersTable"
 import DataTableHeader from "@/components/shared/DataTableHeader"
 
 export default function FarmersPage() {
-    const [searchValue, setSearchValue] = useState("")
+    return (
+        <Suspense fallback={null}>
+            <FarmersPageFromUrl />
+        </Suspense>
+    )
+}
+
+function FarmersPageFromUrl() {
+    const searchParams = useSearchParams()
+    const search = searchParams.get("search") ?? ""
+
+    return <FarmersPageContent key={search} initialSearch={search} />
+}
+
+function FarmersPageContent({ initialSearch }: { initialSearch: string }) {
+    const [searchValue, setSearchValue] = useState(initialSearch)
     const [selectedFilter, setSelectedFilter] = useState("all")
     const [totalCount, setTotalCount] = useState(0)
 

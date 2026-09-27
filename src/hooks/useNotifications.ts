@@ -5,7 +5,6 @@ import {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
-  getNotifications,
 } from "@/services/notification.service";
 
 // ─── Unread count (runs on mount, refetches every 30s) ──────────────────────
@@ -28,7 +27,7 @@ export function useUserNotifications(open: boolean) {
   return useQuery({
     queryKey: queryKeys.notifications(),
     queryFn: async () => {
-      const result = await getNotifications(1, 30);
+      const result = await getNotificationsByUser(1, 30);
       if (result.status && result.data) {
         return result.data;
       }

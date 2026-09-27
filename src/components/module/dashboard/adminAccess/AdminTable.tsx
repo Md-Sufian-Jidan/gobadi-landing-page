@@ -35,11 +35,20 @@ export default function AdminTable({
 }: AdminTableProps) {
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([])
+    const [debouncedSearch, setDebouncedSearch] = useState(searchValue)
     const queryClient = useQueryClient()
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchValue)
+            setCurrentPage(1)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchValue])
+
     const { data: result, isLoading: loading } = useQuery({
-        queryKey: queryKeys.admins(currentPage),
-        queryFn: () => getAdmins(currentPage, 10),
+        queryKey: queryKeys.admins(currentPage, debouncedSearch.trim() || undefined),
+        queryFn: () => getAdmins(currentPage, 10, debouncedSearch.trim() || undefined),
     })
 
     const admins: Admin[] = result?.status && result.data ? result.data : []
@@ -77,16 +86,9 @@ export default function AdminTable({
                 if (a.status.toLowerCase() !== filterLower) return false
             }
 
-            if (!searchValue.trim()) return true
-            const q = searchValue.toLowerCase()
-            return (
-                (a.name || "").toLowerCase().includes(q) ||
-                a.email.toLowerCase().includes(q) ||
-                a.role.toLowerCase().includes(q) ||
-                a.designation.toLowerCase().includes(q)
-            )
+            return true
         })
-    }, [admins, searchValue, selectedFilter])
+    }, [admins, selectedFilter])
 
     const columns: TableColumn<Admin>[] = [
         {

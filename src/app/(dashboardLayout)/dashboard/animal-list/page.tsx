@@ -1,12 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import AnimalListTable from "@/components/module/dashboard/animalList/AnimalListTable"
 import DataTableHeader from "@/components/shared/DataTableHeader"
 
 export default function AnimalListPage() {
-    const [searchValue, setSearchValue] = useState("")
+    return (
+        <Suspense fallback={null}>
+            <AnimalListPageFromUrl />
+        </Suspense>
+    )
+}
+
+function AnimalListPageFromUrl() {
+    const searchParams = useSearchParams()
+    const search = searchParams.get("search") ?? ""
+
+    return <AnimalListPageContent key={search} initialSearch={search} />
+}
+
+function AnimalListPageContent({ initialSearch }: { initialSearch: string }) {
+    const [searchValue, setSearchValue] = useState(initialSearch)
     const [selectedFilter, setSelectedFilter] = useState("all")
     const [totalCount, setTotalCount] = useState(0)
 

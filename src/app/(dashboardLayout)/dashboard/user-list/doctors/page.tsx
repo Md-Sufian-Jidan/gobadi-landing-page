@@ -1,12 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import DataTableHeader from "@/components/shared/DataTableHeader"
 import DoctorsTable from "@/components/module/dashboard/userList/doctors/DoctorsTable"
 
 export default function DoctorsPage() {
-    const [searchValue, setSearchValue] = useState("")
+    return (
+        <Suspense fallback={null}>
+            <DoctorsPageFromUrl />
+        </Suspense>
+    )
+}
+
+function DoctorsPageFromUrl() {
+    const searchParams = useSearchParams()
+    const search = searchParams.get("search") ?? ""
+
+    return <DoctorsPageContent key={search} initialSearch={search} />
+}
+
+function DoctorsPageContent({ initialSearch }: { initialSearch: string }) {
+    const [searchValue, setSearchValue] = useState(initialSearch)
     const [selectedFilter, setSelectedFilter] = useState("all")
     const [totalCount, setTotalCount] = useState(0)
 

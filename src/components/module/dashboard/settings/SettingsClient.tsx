@@ -26,7 +26,7 @@ import {
 import { adminLogoutAction, updateAdminProfileAction } from "@/services/adminAuth.service";
 import { useAdminProfile } from "@/hooks/useAdminProfile";
 import { queryKeys } from "@/lib/queryKeys";
-import { resolveAvatarUrl } from "@/lib/utils";
+import { resolveAvatarUrl, toUiDesignation } from "@/lib/utils";
 
 const COUNTRIES = [
     { code: "DE", flag: "🇩🇪", label: "Germany (+49)", dial: "+49" },
@@ -317,11 +317,11 @@ export default function SettingsClient() {
                                     <h3 className="text-base font-bold text-[#1A1A1A]">Preferences</h3>
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-[#1A1A1A]">Role:</span>
-                                        <span className="font-bold text-[#C15C2B] capitalize">{role || "N/A"}</span>
+                                        <span className="font-bold text-[#C15C2B] capitalize">{role ? (role === "super_admin" ? "Super Admin" : "Admin") : "N/A"}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-[#1A1A1A]">Designation:</span>
-                                        <span className="font-bold text-[#C15C2B] capitalize">{designation || "N/A"}</span>
+                                        <span className="font-bold text-[#C15C2B] capitalize">{designation ? toUiDesignation(designation) : "N/A"}</span>
                                     </div>
                                 </div>
                             </Card>
@@ -488,7 +488,7 @@ export default function SettingsClient() {
                                 </Label>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger disabled className="w-full h-12 px-4 rounded-[14px] border border-[#EAE5DD] bg-white flex items-center justify-between text-sm font-medium text-[#737373] outline-none cursor-not-allowed opacity-80">
-                                        <span className="uppercase">{role}</span>
+                                        <span className="uppercase">{role === "super_admin" ? "Super Admin" : role}</span>
                                         <ChevronDown className="w-4 h-4 text-[#737373]" />
                                     </DropdownMenuTrigger>
                                 </DropdownMenu>

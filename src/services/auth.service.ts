@@ -20,28 +20,6 @@ type ApiAuthResponse = {
     data?: { accessToken?: string; refreshToken?: string } & Record<string, unknown>;
 } | null;
 
-export async function registerAction(data: {
-    name: string;
-    identifier: string;
-    password: string;
-    role?: string;
-}) {
-    const API_BASE_URL = getApiBaseUrl();
-    const res = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-        return { status: false, message: result.message || "Registration failed" };
-    }
-
-    return { status: true, message: result.message };
-}
-
 export async function loginAction(data: { identifier: string; password: string }) {
     try {
         const API_BASE_URL = getApiBaseUrl();
@@ -115,29 +93,81 @@ export async function logoutAction() {
     }
 }
 
-export async function forgotPasswordAction(email: string) {
+export async function forgotPasswordAction(identifier: string) {
     const API_BASE_URL = getApiBaseUrl();
     const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ identifier }),
     });
 
     const result = await res.json();
 
     if (!res.ok) {
-        return { status: false, message: result.message || "Failed to send reset link" };
+        return { status: false, message: result.message || "Failed to send reset code" };
     }
 
     return { status: true, message: result.message };
 }
 
-export async function resetPasswordAction(token: string, password: string) {
+export async function verifyOtpAction(
+    phone: string,
+    code: string,
+    purpose: "login" | "verify" | "reset" = "reset"
+) {
     const API_BASE_URL = getApiBaseUrl();
-    const res = await fetch(`${API_BASE_URL}/auth/reset-password/${token}`, {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ phone, code, purpose }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+        return { status: false, message: result.message || "Failed to verify OTP" };
+    }
+
+    const payload = result?.data ?? result;
+
+    if (purpose === "reset") {
+        const resetToken =
+            (payload as { resetToken?: string } | null)?.resetToken ??
+            (result as { resetToken?: string } | null)?.resetToken;
+
+        if (!resetToken) {
+            return {
+                status: false,
+                message: "No reset token was issued. Please request a new code.",
+            };
+        }
+
+        const cookieStore = await cookies();
+        cookieStore.set("userResetToken", resetToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 10, // 10 minutes
+            path: "/",
+        });
+    }
+
+    return { status: true, data: payload };
+}
+
+export async function resetPasswordAction(newPassword: string) {
+    const cookieStore = await cookies();
+    const resetToken = cookieStore.get("userResetToken")?.value;
+
+    if (!resetToken) {
+        return { status: false, message: "Reset token not found. Please request a new code." };
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resetToken, newPassword }),
     });
 
     const result = await res.json();
@@ -146,7 +176,9 @@ export async function resetPasswordAction(token: string, password: string) {
         return { status: false, message: result.message || "Failed to reset password" };
     }
 
-    return { status: true, data: result.data };
+    cookieStore.delete("userResetToken");
+
+    return { status: true, message: result.message };
 }
 
 export const getProfile = cache(async () => {

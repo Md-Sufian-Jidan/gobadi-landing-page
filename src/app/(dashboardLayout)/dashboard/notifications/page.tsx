@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { Suspense, useState, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import DataTableHeader from "@/components/shared/DataTableHeader"
 import NotificationsTable from "@/components/module/dashboard/notifications/NotificationsTable"
@@ -12,7 +13,22 @@ import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/queryKeys"
 
 export default function NotificationsPage() {
-  const [searchValue, setSearchValue] = useState("")
+  return (
+    <Suspense fallback={null}>
+      <NotificationsPageFromUrl />
+    </Suspense>
+  )
+}
+
+function NotificationsPageFromUrl() {
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") ?? ""
+
+  return <NotificationsPageContent key={search} initialSearch={search} />
+}
+
+function NotificationsPageContent({ initialSearch }: { initialSearch: string }) {
+  const [searchValue, setSearchValue] = useState(initialSearch)
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [totalCount, setTotalCount] = useState(0)

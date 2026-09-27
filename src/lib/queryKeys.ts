@@ -10,8 +10,8 @@
  */
 export const queryKeys = {
     // Admin
-    admins: (page?: number) =>
-        page !== undefined ? ["admins", page] as const : ["admins"] as const,
+    admins: (page?: number, search?: string) =>
+        page !== undefined ? ["admins", page, search] as const : ["admins"] as const,
     admin: (id?: number | string | null) =>
         id !== undefined ? ["admin", id] as const : ["admin"] as const,
     adminProfile: () => ["adminProfile"] as const,

@@ -53,9 +53,11 @@ async function authFetch(url: string, options: AuthFetchOptions = {}): Promise<R
   return res;
 }
 
-export async function getAdmins(page = 1, limit = 10) {
+export async function getAdmins(page = 1, limit = 10, search?: string) {
   const API_BASE_URL = getApiBaseUrl();
-  const res = await authFetch(`${API_BASE_URL}/dashboard/admins?page=${page}&limit=${limit}`, {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (search && search.trim()) params.set("search", search.trim());
+  const res = await authFetch(`${API_BASE_URL}/dashboard/admins?${params.toString()}`, {
     method: "GET",
   });
   const result = await res.json();
