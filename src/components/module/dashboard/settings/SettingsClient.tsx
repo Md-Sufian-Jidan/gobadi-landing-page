@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, Eye, EyeOff, Camera, Loader2, LogOut, AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronDown, EyeClosed, EyeOff, Camera, Loader2, LogOut, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -431,7 +431,7 @@ export default function SettingsClient() {
                                         {showPassword ? (
                                             <EyeOff className="w-4 h-4" />
                                         ) : (
-                                            <Eye className="w-4 h-4" />
+                                            <EyeClosed className="w-4 h-4" />
                                         )}
                                     </button>
                                 </div>
@@ -460,7 +460,7 @@ export default function SettingsClient() {
                                         {showConfirmPassword ? (
                                             <EyeOff className="w-4 h-4" />
                                         ) : (
-                                            <Eye className="w-4 h-4" />
+                                            <EyeClosed className="w-4 h-4" />
                                         )}
                                     </button>
                                 </div>
@@ -472,9 +472,8 @@ export default function SettingsClient() {
                                     Role<span className="text-[#C15C2B]">*</span>
                                 </Label>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger disabled className="w-full h-12 px-4 rounded-[14px] border border-[#EAE5DD] bg-white flex items-center justify-between text-sm font-medium text-[#737373] outline-none cursor-not-allowed opacity-80">
+                                    <DropdownMenuTrigger disabled className="w-full h-12 px-4 rounded-[14px] border border-[#EAE5DD] bg-white flex items-center text-sm font-medium text-[#737373] outline-none cursor-not-allowed opacity-80">
                                         <span className="uppercase">{role === "super_admin" ? "Super Admin" : role}</span>
-                                        <ChevronDown className="w-4 h-4 text-[#737373]" />
                                     </DropdownMenuTrigger>
                                 </DropdownMenu>
                             </div>

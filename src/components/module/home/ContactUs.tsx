@@ -48,7 +48,7 @@ export default function ContactUs() {
                                     Let&apos;s stay connected
                                 </h2>
                                 <p className="text-white/80 font-normal text-base md:text-lg leading-relaxed max-w-xl">
-                                    Join the Gobadi community and be part of a smarter future for animal care.
+                                    Join the Gobaadi community and be part of <br /> a smarter future for animal care.
                                 </p>
                             </div>
 
