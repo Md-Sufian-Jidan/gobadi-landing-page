@@ -27,42 +27,7 @@ import { adminLogoutAction, updateAdminProfileAction } from "@/services/adminAut
 import { useAdminProfile } from "@/hooks/useAdminProfile";
 import { queryKeys } from "@/lib/queryKeys";
 import { resolveAvatarUrl, toUiDesignation } from "@/lib/utils";
-
-const COUNTRIES = [
-    { code: "DE", flag: "🇩🇪", label: "Germany (+49)", dial: "+49" },
-    { code: "BD", flag: "🇧🇩", label: "Bangladesh (+880)", dial: "+880" },
-    { code: "US", flag: "🇺🇸", label: "United States (+1)", dial: "+1" },
-    { code: "UK", flag: "🇬🇧", label: "United Kingdom (+44)", dial: "+44" },
-];
-
-/** Splits "+8801712345678" into a known dial code and the local number. */
-function parsePhone(value?: string | null): { dial: string; number: string } {
-    const trimmed = (value || "").trim();
-    if (!trimmed) return { dial: "", number: "" };
-
-    const match = [...COUNTRIES]
-        .sort((a, b) => b.dial.length - a.dial.length)
-        .find((c) => trimmed.startsWith(c.dial));
-
-    if (match) {
-        return { dial: match.dial, number: trimmed.slice(match.dial.length).replace(/[^\d]/g, "") };
-    }
-    return { dial: "", number: trimmed.replace(/[^\d]/g, "") };
-}
-
-/** Builds the international number that gets sent to the API. */
-function formatPhone(raw: string, dial: string): string {
-    const trimmed = raw.trim();
-    if (!trimmed) return "";
-    if (trimmed.startsWith("+")) return `+${trimmed.replace(/[^\d]/g, "")}`;
-
-    const digits = trimmed.replace(/[^\d]/g, "");
-    if (!digits) return "";
-    if (!dial) return `+${digits}`;
-
-    const local = digits.startsWith("0") ? digits.slice(1) : digits;
-    return `${dial}${local}`;
-}
+import { COUNTRIES, formatPhone, parsePhone, validatePhone } from "@/lib/phone";
 
 export default function SettingsClient() {
     const router = useRouter();
@@ -82,6 +47,7 @@ export default function SettingsClient() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [saving, setSaving] = useState<boolean>(false);
     const [loggingOut, setLoggingOut] = useState<boolean>(false);
+    const [phoneError, setPhoneError] = useState<string>("");
 
     const nameParts = (admin?.name || "").trim().split(/\s+/).filter(Boolean);
     const serverPhone = parsePhone(admin?.phone);
@@ -143,10 +109,18 @@ export default function SettingsClient() {
             return;
         }
 
-        if (phone.trim() && phone.replace(/\D/g, "").length < 6) {
-            toast.error("Please enter a valid phone number");
-            return;
+        let formattedPhone = "";
+        if (phoneEdit) {
+            formattedPhone = formatPhone(phoneEdit.raw, phoneEdit.dial);
+            const phoneCheck = validatePhone(formattedPhone);
+            if (!phoneCheck.ok) {
+                setPhoneError(phoneCheck.message);
+                toast.error(phoneCheck.message);
+                return;
+            }
+            formattedPhone = phoneCheck.phone;
         }
+        setPhoneError("");
 
         if (password && password.length < 6) {
             toast.error("Password must be at least 6 characters");
@@ -162,10 +136,7 @@ export default function SettingsClient() {
             const formData = new FormData();
             formData.append("name", name);
             if (password) formData.append("password", password);
-            if (phoneEdit) {
-                const formattedPhone = formatPhone(phoneEdit.raw, phoneEdit.dial);
-                if (formattedPhone) formData.append("phone", formattedPhone);
-            }
+            if (phoneEdit && formattedPhone) formData.append("phone", formattedPhone);
             if (selectedFile) formData.append("avatar", selectedFile);
 
             const result = await updateAdminProfileAction(formData);
@@ -380,7 +351,7 @@ export default function SettingsClient() {
                                 <Label htmlFor="phone" className="text-sm font-semibold text-[#1A1A1A]">
                                     Phone<span className="text-[#C15C2B]">*</span>
                                 </Label>
-                                <div className="flex items-center h-12 w-full rounded-[14px] bg-white border border-[#EAE5DD] px-3.5 focus-within:border-[#1A1A1A] transition-all shadow-none">
+                                <div className={`flex items-center h-12 w-full rounded-[14px] bg-white border ${phoneError ? "border-red-500" : "border-[#EAE5DD]"} px-3.5 focus-within:border-[#1A1A1A] transition-all shadow-none`}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger
                                             type="button"
@@ -397,7 +368,10 @@ export default function SettingsClient() {
                                             {COUNTRIES.map((country) => (
                                                 <DropdownMenuItem
                                                     key={country.code}
-                                                    onClick={() => setPhoneEdit({ raw: phone, dial: country.dial })}
+                                                    onClick={() => {
+                                                        setPhoneEdit({ raw: phone, dial: country.dial });
+                                                        setPhoneError("");
+                                                    }}
                                                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer transition-colors ${selectedCountry.code === country.code
                                                         ? "bg-[#F5F2EC] text-[#1A1A1A] font-semibold"
                                                         : "text-[#525252] hover:bg-[#F5F2EC] hover:text-[#1A1A1A]"
@@ -417,10 +391,21 @@ export default function SettingsClient() {
                                         type="tel"
                                         value={phone}
                                         placeholder="Phone number"
-                                        onChange={(e) => setPhoneEdit({ raw: e.target.value, dial: selectedCountry.dial })}
+                                        aria-invalid={phoneError ? true : undefined}
+                                        aria-describedby={phoneError ? "phone-error" : undefined}
+                                        onChange={(e) => {
+                                            setPhoneEdit({ raw: e.target.value, dial: selectedCountry.dial });
+                                            setPhoneError("");
+                                        }}
                                         className="w-full bg-transparent text-sm text-[#1A1A1A] placeholder:text-[#A3A3A3] outline-none border-none p-0 focus:outline-none focus:ring-0"
                                     />
                                 </div>
+                                {phoneError && (
+                                    <p id="phone-error" role="alert" className="flex items-center gap-1.5 text-xs font-medium text-red-500">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        {phoneError}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Change Password */}

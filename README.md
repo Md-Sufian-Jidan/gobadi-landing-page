@@ -213,6 +213,20 @@ To deploy your own copy:
 
 The `NEXT_PUBLIC_SITE_URL` environment variable is used for generating absolute URLs in metadata (canonical, Open Graph, Twitter cards). Set this to your own domain in Vercel's environment variable settings. `NEXT_PUBLIC_API_URL` must point to the backend API.
 
+### Contact form (email delivery)
+
+The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/api/contact/route.ts`), which validates the payload and sends the message through Gmail SMTP with `nodemailer`. Configure these **server-side** environment variables (Vercel → Project → Settings → Environment Variables):
+
+| Variable | Example | Purpose |
+|---|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` | SMTP server hostname |
+| `SMTP_PORT` | `587` | SMTP port (`587` = STARTTLS, `465` = implicit TLS) |
+| `SMTP_USER` | `ceo.gobaadi@gmail.com` | Gmail account used as the sender |
+| `SMTP_PASS` | `<app password>` | [Gmail App Password](https://myaccount.google.com/apppasswords) (enable 2-Step Verification first) — never a normal password |
+| `CONTACT_TO_EMAIL` | `ceo.gobaadi@gmail.com` | Where contact submissions are delivered |
+
+Without these variables the endpoint responds `500` and the form shows a friendly error — it never silently succeeds. Invalid email addresses are rejected both client-side and server-side (zod schema in `src/lib/contact.ts`), so no email is ever sent for an invalid address.
+
 ---
 
 ## Contact

@@ -1,6 +1,6 @@
-import { FiMail, FiPhone, FiMapPin, FiSend } from "react-icons/fi";
+import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import ContactForm from "./ContactForm";
 
 export default function ContactUs() {
     return (
@@ -111,43 +111,7 @@ export default function ContactUs() {
                             </div>
 
                             <div className="bg-white rounded-[32px] p-6 md:p-8 shadow-2xl w-full max-w-[480px] mx-auto lg:mx-0">
-                                <form className="flex flex-col gap-5" aria-label="Contact form">
-                                    <div className="flex flex-col">
-                                        <label htmlFor="form-email" className="text-sm font-bold text-slate-800 font-display mb-2">
-                                            Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            id="form-email"
-                                            name="email"
-                                            placeholder="Your email"
-                                            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-base"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="flex flex-col">
-                                        <label htmlFor="form-message" className="text-sm font-bold text-slate-800 font-display mb-2">
-                                            Message
-                                        </label>
-                                        <textarea
-                                            id="form-message"
-                                            name="message"
-                                            placeholder="Your message..."
-                                            rows={4}
-                                            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-base resize-none min-h-[140px]"
-                                            required
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="w-full bg-accent hover:bg-[#A34E1F] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-md shadow-accent/15 cursor-pointer font-display mt-2"
-                                    >
-                                        <FiSend className="w-5 h-5" aria-hidden />
-                                        <span>Send Message</span>
-                                    </button>
-                                </form>
+                                <ContactForm />
                             </div>
                         </div>
                     </div>

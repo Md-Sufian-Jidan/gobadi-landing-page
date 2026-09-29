@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import type { AdminProfile } from "@/types/auth.type";
+import { validatePhone } from "@/lib/phone";
 
 const getApiBaseUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL;
@@ -172,6 +173,14 @@ export async function updateAdminProfileAction(
     let accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN)?.value;
     if (!accessToken) {
       return { status: false, message: "No active session" };
+    }
+
+    if (formData.has("phone")) {
+      const phoneCheck = validatePhone(String(formData.get("phone") ?? ""));
+      if (!phoneCheck.ok) {
+        return { status: false, message: phoneCheck.message };
+      }
+      formData.set("phone", phoneCheck.phone);
     }
 
     const API_BASE_URL = getApiBaseUrl();
