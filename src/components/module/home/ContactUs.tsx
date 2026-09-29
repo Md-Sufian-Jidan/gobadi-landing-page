@@ -15,7 +15,7 @@ export default function ContactUs() {
                 backgroundSize: "24px 24px",
             }}
         >
-            <div className="max-w-[1440px] mx-auto px-6 lg:px-10">
+            <div className="max-w-[1440px] mx-auto px-4 lg:px-0">
                 <div className="absolute top-0 left-0 w-full overflow-hidden leading-none -translate-y-[99%]">
                     <svg
                         viewBox="0 0 1440 90"
@@ -35,7 +35,7 @@ export default function ContactUs() {
                     </svg>
                 </div>
 
-                <div className="container mx-auto px-1 md:px-8 relative z-10">
+                <div className="relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
                         <div className="lg:col-span-7 flex flex-col gap-10">
                             <div className="flex flex-col items-start gap-4">
@@ -52,7 +52,7 @@ export default function ContactUs() {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 pt-4 border-t border-white/10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 pt-4 border-t border-white/10">
                                 <div className="space-y-4">
                                     <div className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white">
                                         <FiMail className="w-5 h-5" aria-hidden />

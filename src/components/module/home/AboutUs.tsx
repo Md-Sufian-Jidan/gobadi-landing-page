@@ -29,7 +29,7 @@ export default function AboutUs() {
                     className=""
                 />
             </div>
-            <div className="max-w-7xl mx-auto px-6 lg:pt-20 py-10s absolute z-10 inset-0">
+            <div className="max-w-[1320px] mx-auto lg:pt-20 py-10s absolute z-10 inset-0">
                 <div className="max-w-5xl mx-auto pt-10 ">
                     <ResuableTitleDescription
                         subTitle="ABOUT US"
@@ -42,7 +42,7 @@ export default function AboutUs() {
                     />
                 </div>
 
-                <div className="px-4 md:px-8  z-10 mt-10 lg:mt-30">
+                <div className="px-4 md:px-0 z-10 mt-10 lg:mt-30">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8 items-center">
                         <div
                             className="relative w-full lg:aspect-[4/5] aspect-[3/3] rounded-[32px] overflow-hidden shadow-2xl"

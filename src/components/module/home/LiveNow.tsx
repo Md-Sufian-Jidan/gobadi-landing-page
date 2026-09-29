@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function LiveNow() {
     return (
-        <section className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 py-10 md:py-20 overflow-hidden">
+        <section className="w-full max-w-[1320px] mx-auto px-4 md:px-0 py-10 md:py-20 overflow-hidden">
             <div className="relative w-full overflow-hidden rounded-[28px] sm:rounded-[38px] md:rounded-[48px] lg:rounded-[56px] border border-[#C0612B]/40 bg-gradient-to-br from-[#FFF7F0] via-[#FFF9F5] to-[#FFFFFF] p-6 sm:p-10 md:p-14 lg:p-16 shadow-[0_10px_30px_rgba(192,97,43,0.05)]">
 
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
