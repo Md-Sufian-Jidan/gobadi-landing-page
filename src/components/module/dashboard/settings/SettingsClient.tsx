@@ -27,7 +27,7 @@ import { adminLogoutAction, updateAdminProfileAction } from "@/services/adminAut
 import { useAdminProfile } from "@/hooks/useAdminProfile";
 import { queryKeys } from "@/lib/queryKeys";
 import { resolveAvatarUrl, toUiDesignation } from "@/lib/utils";
-import { COUNTRIES, formatPhone, parsePhone, validatePhone } from "@/lib/phone";
+import { COUNTRIES, checkPhoneRawInput, detectDial, formatPhone, parsePhone, validatePhone } from "@/lib/phone";
 
 export default function SettingsClient() {
     const router = useRouter();
@@ -111,6 +111,12 @@ export default function SettingsClient() {
 
         let formattedPhone = "";
         if (phoneEdit) {
+            const rawCheck = checkPhoneRawInput(phoneEdit.raw);
+            if (!rawCheck.ok) {
+                setPhoneError(rawCheck.message);
+                toast.error(rawCheck.message);
+                return;
+            }
             formattedPhone = formatPhone(phoneEdit.raw, phoneEdit.dial);
             const phoneCheck = validatePhone(formattedPhone);
             if (!phoneCheck.ok) {
@@ -369,7 +375,15 @@ export default function SettingsClient() {
                                                 <DropdownMenuItem
                                                     key={country.code}
                                                     onClick={() => {
-                                                        setPhoneEdit({ raw: phone, dial: country.dial });
+                                                        const trimmed = phone.trim();
+                                                        let raw = phone;
+                                                        if (trimmed.startsWith("+")) {
+                                                            const typedDial = detectDial(trimmed);
+                                                            if (typedDial && trimmed.startsWith(typedDial)) {
+                                                                raw = trimmed.slice(typedDial.length);
+                                                            }
+                                                        }
+                                                        setPhoneEdit({ raw, dial: country.dial });
                                                         setPhoneError("");
                                                     }}
                                                     className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer transition-colors ${selectedCountry.code === country.code
@@ -389,12 +403,24 @@ export default function SettingsClient() {
                                     <input
                                         id="phone"
                                         type="tel"
+                                        inputMode="tel"
+                                        maxLength={18}
                                         value={phone}
                                         placeholder="Phone number"
                                         aria-invalid={phoneError ? true : undefined}
                                         aria-describedby={phoneError ? "phone-error" : undefined}
                                         onChange={(e) => {
-                                            setPhoneEdit({ raw: e.target.value, dial: selectedCountry.dial });
+                                            const value = e.target.value;
+                                            const trimmed = value.trim();
+                                            if (trimmed.startsWith("+")) {
+                                                const typedDial = detectDial(trimmed);
+                                                if (typedDial && trimmed.startsWith(typedDial)) {
+                                                    setPhoneEdit({ raw: trimmed.slice(typedDial.length), dial: typedDial });
+                                                    setPhoneError("");
+                                                    return;
+                                                }
+                                            }
+                                            setPhoneEdit({ raw: value, dial: selectedCountry.dial });
                                             setPhoneError("");
                                         }}
                                         className="w-full bg-transparent text-sm text-[#1A1A1A] placeholder:text-[#A3A3A3] outline-none border-none p-0 focus:outline-none focus:ring-0"

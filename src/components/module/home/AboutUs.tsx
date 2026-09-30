@@ -11,7 +11,7 @@ export default function AboutUs() {
         <section
             id="about"
             aria-labelledby="about-heading"
-            className="w-full relative lg:h-[1250px] h-[750px]"
+            className="w-full relative lg:h-[1250px] h-[750px] bg-white"
         >
             <div className="absolute inset-0 h-full w-full">
                 <Image

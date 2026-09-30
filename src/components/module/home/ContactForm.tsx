@@ -11,16 +11,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { contactSchema, type ContactFormData } from "@/lib/contact";
 
+const GENERIC_SUBMIT_ERROR = "Could not send your message. Please try again.";
+
 export default function ContactForm() {
     const {
         register,
         handleSubmit,
         reset,
+        setError,
+        trigger,
         formState: { errors, isSubmitting },
     } = useForm<ContactFormData>({
         resolver: zodResolver(contactSchema),
         defaultValues: { email: "", message: "" },
+        mode: "onBlur",
     });
+
+    const emailField = register("email");
+
+    const checkEmailDomain = async (raw: string) => {
+        if (!raw.trim()) return;
+        // Wait for the schema check so this result can't be wiped by it.
+        if (!(await trigger("email"))) return;
+
+        try {
+            const res = await fetch("/api/validate-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: raw.trim() }),
+            });
+            const json = await res.json().catch(() => null);
+            if (!res.ok || json?.ok !== true) {
+                setError("email", {
+                    type: "server",
+                    message: json?.error ?? "Please enter a valid email address",
+                });
+            }
+        } catch {
+            // Network hiccup: the server re-checks on submit anyway.
+        }
+    };
 
     const onSubmit = async (data: ContactFormData) => {
         try {
@@ -32,7 +62,11 @@ export default function ContactForm() {
 
             const json = await res.json().catch(() => null);
             if (!res.ok) {
-                toast.error(json?.error ?? "Could not send your message. Please try again.");
+                const message = json?.error ?? GENERIC_SUBMIT_ERROR;
+                if (res.status === 400 && (json?.field === "email" || json?.field === "message")) {
+                    setError(json.field, { type: "server", message });
+                }
+                toast.error(message);
                 return;
             }
 
@@ -40,7 +74,7 @@ export default function ContactForm() {
             reset();
         } catch (error) {
             console.error("Contact form error:", error);
-            toast.error("Could not send your message. Please try again.");
+            toast.error(GENERIC_SUBMIT_ERROR);
         }
     };
 
@@ -65,7 +99,11 @@ export default function ContactForm() {
                     disabled={isSubmitting}
                     aria-invalid={!!errors.email}
                     className="h-12 rounded-xl px-4 text-base text-slate-900 placeholder:text-slate-400"
-                    {...register("email")}
+                    {...emailField}
+                    onBlur={(event) => {
+                        emailField.onBlur(event);
+                        void checkEmailDomain(event.target.value);
+                    }}
                 />
                 {errors.email && (
                     <p className="text-xs text-red-500 mt-1" role="alert">

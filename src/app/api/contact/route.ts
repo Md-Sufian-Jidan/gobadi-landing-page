@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { ContactFormData, contactSchema } from "@/lib/contact";
+import {
+    ContactFormData,
+    contactSchema,
+    emailDomain,
+    UNVERIFIED_DOMAIN_MESSAGE,
+} from "@/lib/contact";
+import { hasMxRecord } from "@/lib/email-mx";
 import { renderContactEmail } from "@/lib/email-template";
 
 export async function POST(req: Request) {
@@ -14,13 +20,21 @@ export async function POST(req: Request) {
     const parsed = contactSchema.safeParse(body);
     if (!parsed.success) {
         const firstIssue = parsed.error.issues[0];
+        const field = typeof firstIssue?.path[0] === "string" ? firstIssue.path[0] : undefined;
         return NextResponse.json(
-            { error: firstIssue?.message ?? "Invalid input" },
+            { error: firstIssue?.message ?? "Invalid input", field },
             { status: 400 },
         );
     }
 
     const { email, message } = parsed.data;
+
+    if (!(await hasMxRecord(emailDomain(email)))) {
+        return NextResponse.json(
+            { error: UNVERIFIED_DOMAIN_MESSAGE, field: "email" },
+            { status: 400 },
+        );
+    }
 
     const { SMTP_HOST, SMTP_USER, SMTP_PASS, CONTACT_TO_EMAIL } = process.env;
     const smtpPass = (SMTP_PASS ?? "").replace(/\s+/g, "");

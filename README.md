@@ -215,7 +215,7 @@ The `NEXT_PUBLIC_SITE_URL` environment variable is used for generating absolute 
 
 ### Contact form (email delivery)
 
-The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/api/contact/route.ts`), which validates the payload and sends the message through Gmail SMTP with `nodemailer`. Configure these **server-side** environment variables (Vercel → Project → Settings → Environment Variables):
+The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/api/contact/route.ts`), which validates the payload and sends the message through Gmail SMTP with `nodemailer`. Configure these **server-side** environment variables:
 
 | Variable | Example | Purpose |
 |---|---|---|
@@ -224,8 +224,19 @@ The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/
 | `SMTP_USER` | `ceo.gobaadi@gmail.com` | Gmail account used as the sender |
 | `SMTP_PASS` | `<app password>` | [Gmail App Password](https://myaccount.google.com/apppasswords) (enable 2-Step Verification first) — never a normal password |
 | `CONTACT_TO_EMAIL` | `ceo.gobaadi@gmail.com` | Where contact submissions are delivered |
+| `CONTACT_MX_DNS_SERVERS` | `172.16.100.110,172.16.100.106` | Optional. Comma-separated DNS servers for the MX check — only needed on hosts whose default Node resolver does not work |
 
-Without these variables the endpoint responds `500` and the form shows a friendly error — it never silently succeeds. Invalid email addresses are rejected both client-side and server-side (zod schema in `src/lib/contact.ts`), so no email is ever sent for an invalid address.
+Without the SMTP variables the endpoint responds `500` and the form shows a friendly error — it never silently succeeds.
+
+#### Email validation (no mail is sent for a rejected address)
+
+Validation runs in three layers, and every layer is enforced again on the server so a direct `curl` cannot bypass it:
+
+1. **Syntax + disposable domains** — `zod` schema in `src/lib/contact.ts` rejects malformed addresses and known temporary providers (mailinator, yopmail, guerrillamail, 10minutemail, ...), including their subdomains.
+2. **MX record check** — `src/lib/email-mx.ts` asks DNS for the domain's mail exchanger. A domain that cannot receive mail (`fdasfads.com`) returns `400` and the SMTP send never happens. Gmail, Outlook, Yahoo and company domains all pass. The check **fails closed**: if DNS cannot verify the domain, the message is rejected.
+3. **Client feedback** — the form validates on blur: syntax/disposable errors appear immediately from the schema, and `POST /api/validate-email` runs the MX check so the error shows under the field before pressing Send.
+
+Tests: `src/lib/contact.test.ts` and `src/lib/email-mx.test.ts`.
 
 ---
 
