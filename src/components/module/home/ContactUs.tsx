@@ -59,9 +59,9 @@ export default function ContactUs() {
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="md:text-[30px] text-xl font-semibold text-white font-display">Email</h3>
-                                        <p className="text-white md:text-lg text-base font-normal break-all">
+                                        <a href="mailto:ceo.gobaadi@gmail.com" target="_blank" className="text-white md:text-lg text-base font-normal break-all">
                                             ceo.gobaadi@gmail.com
-                                        </p>
+                                        </a>
                                     </div>
                                 </div>
 
@@ -71,9 +71,9 @@ export default function ContactUs() {
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="md:text-[30px] text-xl font-semibold text-white font-display">Phone</h3>
-                                        <p className="text-white md:text-lg text-base font-normal">
+                                        <a href="tel:+01911418977" target="_blank" className="text-white md:text-lg text-base font-normal">
                                             +8801911418977
-                                        </p>
+                                        </a>
                                     </div>
                                 </div>
 
