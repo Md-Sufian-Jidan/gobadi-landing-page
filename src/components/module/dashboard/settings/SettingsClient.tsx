@@ -29,6 +29,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { resolveAvatarUrl, toUiDesignation } from "@/lib/utils";
 import { COUNTRIES, checkPhoneRawInput, detectDial, formatPhone, parsePhone, validatePhone } from "@/lib/phone";
 
+const DEFAULT_PHONE_COUNTRY = COUNTRIES.find((country) => country.code === "BD") ?? COUNTRIES[0];
+
 export default function SettingsClient() {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -56,10 +58,10 @@ export default function SettingsClient() {
     const lastName = lastNameEdit ?? nameParts.slice(1).join(" ");
     const phoneValue = phoneEdit ?? {
         raw: serverPhone.number,
-        dial: serverPhone.dial || COUNTRIES[0].dial,
+        dial: serverPhone.dial || DEFAULT_PHONE_COUNTRY.dial,
     };
     const phone = phoneValue.raw;
-    const selectedCountry = COUNTRIES.find((c) => c.dial === phoneValue.dial) || COUNTRIES[0];
+    const selectedCountry = COUNTRIES.find((c) => c.dial === phoneValue.dial) || DEFAULT_PHONE_COUNTRY;
 
     const email = admin?.email || "";
     const role = admin?.role || "";

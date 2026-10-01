@@ -91,6 +91,10 @@ describe("validatePhone", () => {
     });
 
     it("rejects correctly-sized but invalid Bangladeshi numbers", () => {
+        expect(validatePhone("+8801312345678").ok).toBe(true);
+        expect(validatePhone("+8801912345678").ok).toBe(true);
+        expect(validatePhone("+8801012345678").ok).toBe(false);
+        expect(validatePhone("+8801212345678").ok).toBe(false);
         expect(validatePhone("+8809123456789").ok).toBe(false);
         expect(validatePhone("+8809999999999").ok).toBe(false);
         expect(validatePhone("+8802123456789").ok).toBe(false);

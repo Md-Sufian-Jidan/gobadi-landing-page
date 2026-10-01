@@ -27,8 +27,8 @@ const PHONE_RULES: Record<
         minDigits: 10,
         maxDigits: 10,
         name: "Bangladeshi",
-        // Bangladeshi mobile numbers are 1XXXXXXXXX after the dial code.
-        pattern: /^1\d{9}$/,
+        // Bangladeshi mobile prefixes are 013 through 019.
+        pattern: /^1[3-9]\d{8}$/,
     },
     "+1": {
         minDigits: 10,

@@ -6,7 +6,7 @@ export default function ContactUs() {
     return (
         <section
             id="contact"
-            className=" relative bg-accent py-12 md:py-24 mt-6 md:mt-24"
+            className="px-4 relative bg-accent py-12 md:py-24 mt-6 md:mt-24"
             style={{
                 backgroundImage: `
                     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
