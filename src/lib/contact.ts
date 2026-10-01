@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const CONTACT_EMAIL = "ceo.gobaadi@gmail.com";
+
 /** Temporary/disposable inbox providers — never a real way to reach someone. */
 export const DISPOSABLE_DOMAINS: readonly string[] = [
     "10minutemail.com",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import {
+    CONTACT_EMAIL,
     ContactFormData,
     contactSchema,
     emailDomain,
@@ -47,8 +48,11 @@ export async function POST(req: Request) {
             CONTACT_TO_EMAIL: !!CONTACT_TO_EMAIL,
         });
         return NextResponse.json(
-            { error: "The contact form is not configured yet. Please contact us directly." },
-            { status: 500 },
+            {
+                error: "Email delivery is temporarily unavailable. Please contact us directly.",
+                fallbackEmail: CONTACT_EMAIL,
+            },
+            { status: 503 },
         );
     }
 

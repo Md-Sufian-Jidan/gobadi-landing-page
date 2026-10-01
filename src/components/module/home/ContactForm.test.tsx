@@ -83,4 +83,27 @@ describe("ContactForm", () => {
             (screen.getByLabelText("Email") as HTMLInputElement).getAttribute("aria-invalid"),
         ).toBe("true");
     });
+
+    it("offers a prefilled direct email fallback when delivery is unavailable", async () => {
+        stubFetch((url) =>
+            url.endsWith("/api/validate-email")
+                ? { ok: true, status: 200, json: async () => ({ ok: true }) }
+                : {
+                      ok: false,
+                      status: 503,
+                      json: async () => ({
+                          error: "Email delivery is temporarily unavailable. Please contact us directly.",
+                          fallbackEmail: "ceo.gobaadi@gmail.com",
+                      }),
+                  },
+        );
+
+        render(<ContactForm />);
+        fillForm("someone@gmail.com", "Hello, I would like to know more.");
+        fireEvent.click(screen.getByRole("button", { name: /send message/i }));
+
+        const link = await screen.findByRole("link", { name: "ceo.gobaadi@gmail.com" });
+        expect(link.getAttribute("href")).toContain("mailto:ceo.gobaadi@gmail.com");
+        expect(link.getAttribute("href")).toContain("Hello%2C%20I%20would%20like%20to%20know%20more.");
+    });
 });

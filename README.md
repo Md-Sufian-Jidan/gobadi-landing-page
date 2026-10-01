@@ -226,7 +226,7 @@ The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/
 | `CONTACT_TO_EMAIL` | `ceo.gobaadi@gmail.com` | Where contact submissions are delivered |
 | `CONTACT_MX_DNS_SERVERS` | `172.16.100.110,172.16.100.106` | Optional. Comma-separated DNS servers for the MX check — only needed on hosts whose default Node resolver does not work |
 
-Without the SMTP variables the endpoint responds `500` and the form shows a friendly error — it never silently succeeds.
+Without the SMTP variables the endpoint responds `503` and the form offers a prefilled `mailto:` link to the public contact address — it never silently succeeds. Configure the variables in Vercel for server-side delivery.
 
 #### Email validation (no mail is sent for a rejected address)
 

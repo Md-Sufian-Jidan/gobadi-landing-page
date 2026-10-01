@@ -1,6 +1,7 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -20,6 +21,7 @@ export default function ContactForm() {
         reset,
         setError,
         trigger,
+        control,
         formState: { errors, isSubmitting },
     } = useForm<ContactFormData>({
         resolver: zodResolver(contactSchema),
@@ -27,6 +29,8 @@ export default function ContactForm() {
         mode: "onBlur",
     });
 
+    const [fallbackEmail, setFallbackEmail] = useState<string | null>(null);
+    const message = useWatch({ control, name: "message", defaultValue: "" });
     const emailField = register("email");
 
     const checkEmailDomain = async (raw: string) => {
@@ -63,6 +67,9 @@ export default function ContactForm() {
             const json = await res.json().catch(() => null);
             if (!res.ok) {
                 const message = json?.error ?? GENERIC_SUBMIT_ERROR;
+                if (res.status === 503 && typeof json?.fallbackEmail === "string") {
+                    setFallbackEmail(json.fallbackEmail);
+                }
                 if (res.status === 400 && (json?.field === "email" || json?.field === "message")) {
                     setError(json.field, { type: "server", message });
                 }
@@ -71,6 +78,7 @@ export default function ContactForm() {
             }
 
             toast.success("Message sent! We'll get back to you soon.");
+            setFallbackEmail(null);
             reset();
         } catch (error) {
             console.error("Contact form error:", error);
@@ -86,6 +94,17 @@ export default function ContactForm() {
             aria-label="Contact form"
             aria-busy={isSubmitting}
         >
+            {fallbackEmail && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+                    <p>Email delivery is temporarily unavailable. Please send your message directly:</p>
+                    <a
+                        href={`mailto:${fallbackEmail}?subject=${encodeURIComponent("Gobadi contact message")}&body=${encodeURIComponent(message)}`}
+                        className="mt-1 inline-block font-semibold underline underline-offset-2"
+                    >
+                        {fallbackEmail}
+                    </a>
+                </div>
+            )}
 
             <div className="flex flex-col">
                 <Label htmlFor="form-email" className="text-sm font-bold text-slate-800 font-display mb-2">
