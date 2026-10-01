@@ -12,6 +12,7 @@ export interface MxRecord {
 }
 
 export type MxLookup = (domain: string) => Promise<MxRecord[]>;
+export type MxCheckResult = "verified" | "no-mail-record" | "unavailable";
 
 /**
  * Optional comma-separated DNS servers (e.g. "172.16.100.110,172.16.100.106")
@@ -30,17 +31,16 @@ function createResolver(): Resolver {
 const defaultLookup: MxLookup = (domain) => createResolver().resolveMx(domain);
 
 /**
- * True when the domain publishes MX records, i.e. it can actually receive mail.
- * Fails closed: unknown domain, malformed domain, DNS error and timeout all
- * return false so an unverifiable address is never treated as valid.
+ * Distinguishes domains confirmed to have no mail records from temporary DNS
+ * failures, which should not prevent someone from contacting us.
  */
-export async function hasMxRecord(
+export async function checkMxRecord(
     domain: string,
     timeoutMs: number = DEFAULT_TIMEOUT_MS,
     lookup: MxLookup = defaultLookup,
-): Promise<boolean> {
+): Promise<MxCheckResult> {
     const normalized = domain.trim().toLowerCase().replace(/\.$/, "");
-    if (!normalized || !DOMAIN_RE.test(normalized)) return false;
+    if (!normalized || !DOMAIN_RE.test(normalized)) return "no-mail-record";
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -48,18 +48,17 @@ export async function hasMxRecord(
             timer = setTimeout(() => reject(new Error("DNS_TIMEOUT")), timeoutMs);
         });
         const records = await Promise.race([lookup(normalized), timeout]);
-        return records.length > 0;
+        return records.length > 0 ? "verified" : "no-mail-record";
     } catch (error) {
         const code = (error as NodeJS.ErrnoException | undefined)?.code;
-        // ENOTFOUND / ENODATA / ENOENT: the domain has no mail exchanger.
-        if (code === "ENOTFOUND" || code === "ENODATA" || code === "ENOENT") return false;
+        // These DNS responses definitively mean the domain cannot receive mail.
+        if (code === "ENOTFOUND" || code === "ENODATA") return "no-mail-record";
         console.warn(
             "[email-mx] lookup failed for",
             normalized,
             code ?? (error as Error)?.message,
         );
-        // Timeout or transient resolver failure: cannot verify -> reject.
-        return false;
+        return "unavailable";
     } finally {
         clearTimeout(timer);
     }

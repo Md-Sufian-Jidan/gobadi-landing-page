@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { UNVERIFIED_DOMAIN_MESSAGE, emailDomain, emailSchema } from "@/lib/contact";
-import { hasMxRecord } from "@/lib/email-mx";
+import { checkMxRecord } from "@/lib/email-mx";
 
 /**
  * Lightweight pre-check used by the contact form on blur so the email error
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
 
-    if (!(await hasMxRecord(emailDomain(parsed.data)))) {
+    if ((await checkMxRecord(emailDomain(parsed.data))) === "no-mail-record") {
         return NextResponse.json({ ok: false, error: UNVERIFIED_DOMAIN_MESSAGE }, { status: 400 });
     }
 

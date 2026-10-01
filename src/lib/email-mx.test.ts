@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { hasMxRecord, type MxLookup, type MxRecord } from "./email-mx";
+import { checkMxRecord, type MxLookup, type MxRecord } from "./email-mx";
 
 function dnsError(code: string): NodeJS.ErrnoException {
     const error = new Error(code) as NodeJS.ErrnoException;
@@ -20,47 +20,47 @@ function fakeLookup(result: () => Promise<MxRecord[]>) {
     return { lookup, calls };
 }
 
-describe("hasMxRecord", () => {
-    it("returns true when the domain publishes MX records", async () => {
+describe("checkMxRecord", () => {
+    it("verifies a domain that publishes MX records", async () => {
         const { lookup, calls } = fakeLookup(() =>
             Promise.resolve([{ exchange: "gmail-smtp-in.l.google.com", priority: 5 }]),
         );
-        await expect(hasMxRecord("gmail.com", 3000, lookup)).resolves.toBe(true);
+        await expect(checkMxRecord("gmail.com", 3000, lookup)).resolves.toBe("verified");
         expect(calls).toEqual(["gmail.com"]);
     });
 
-    it("returns false when the domain does not exist (ENOTFOUND)", async () => {
+    it("rejects a domain that does not exist (ENOTFOUND)", async () => {
         const { lookup } = fakeLookup(() => Promise.reject(dnsError("ENOTFOUND")));
-        await expect(hasMxRecord("fdasfads.com", 3000, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("fdasfads.com", 3000, lookup)).resolves.toBe("no-mail-record");
     });
 
-    it("returns false when the domain has no mail exchanger (ENODATA)", async () => {
+    it("rejects a domain with no mail exchanger (ENODATA)", async () => {
         const { lookup } = fakeLookup(() => Promise.reject(dnsError("ENODATA")));
-        await expect(hasMxRecord("example.org", 3000, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("example.org", 3000, lookup)).resolves.toBe("no-mail-record");
     });
 
-    it("returns false when the lookup returns no records", async () => {
+    it("rejects a successful lookup that returns no records", async () => {
         const { lookup } = fakeLookup(() => Promise.resolve([]));
-        await expect(hasMxRecord("example.org", 3000, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("example.org", 3000, lookup)).resolves.toBe("no-mail-record");
     });
 
-    it("fails closed when the DNS lookup times out", async () => {
+    it("does not treat a DNS timeout as proof that the domain is invalid", async () => {
         const { lookup } = fakeLookup(() => new Promise(() => {}));
-        await expect(hasMxRecord("gmail.com", 20, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("gmail.com", 20, lookup)).resolves.toBe("unavailable");
     });
 
-    it("fails closed on transient resolver errors", async () => {
+    it("does not treat transient resolver errors as proof that the domain is invalid", async () => {
         const { lookup } = fakeLookup(() => Promise.reject(dnsError("ECONNREFUSED")));
-        await expect(hasMxRecord("gmail.com", 3000, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("gmail.com", 3000, lookup)).resolves.toBe("unavailable");
     });
 
     it("rejects malformed domains without spending a DNS lookup", async () => {
         const { lookup, calls } = fakeLookup(() =>
             Promise.resolve([{ exchange: "mx.example.com", priority: 1 }]),
         );
-        await expect(hasMxRecord("", 3000, lookup)).resolves.toBe(false);
-        await expect(hasMxRecord("nodots", 3000, lookup)).resolves.toBe(false);
-        await expect(hasMxRecord("-bad-.example", 3000, lookup)).resolves.toBe(false);
+        await expect(checkMxRecord("", 3000, lookup)).resolves.toBe("no-mail-record");
+        await expect(checkMxRecord("nodots", 3000, lookup)).resolves.toBe("no-mail-record");
+        await expect(checkMxRecord("-bad-.example", 3000, lookup)).resolves.toBe("no-mail-record");
         expect(calls).toEqual([]);
     });
 
@@ -68,7 +68,7 @@ describe("hasMxRecord", () => {
         const { lookup, calls } = fakeLookup(() =>
             Promise.resolve([{ exchange: "mx.example.com", priority: 10 }]),
         );
-        await expect(hasMxRecord("  Example.COM. ", 3000, lookup)).resolves.toBe(true);
+        await expect(checkMxRecord("  Example.COM. ", 3000, lookup)).resolves.toBe("verified");
         expect(calls).toEqual(["example.com"]);
     });
 });

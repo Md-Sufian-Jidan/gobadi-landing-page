@@ -224,7 +224,7 @@ The **Contact Us** form posts to the server route `POST /api/contact` (`src/app/
 | `SMTP_USER` | `ceo.gobaadi@gmail.com` | Gmail account used as the sender |
 | `SMTP_PASS` | `<app password>` | [Gmail App Password](https://myaccount.google.com/apppasswords) (enable 2-Step Verification first) — never a normal password |
 | `CONTACT_TO_EMAIL` | `ceo.gobaadi@gmail.com` | Where contact submissions are delivered |
-| `CONTACT_MX_DNS_SERVERS` | `172.16.100.110,172.16.100.106` | Optional. Comma-separated DNS servers for the MX check — only needed on hosts whose default Node resolver does not work |
+| `CONTACT_MX_DNS_SERVERS` | — | Optional. Comma-separated DNS server IPs for hosts whose default Node resolver does not work; configure only servers reachable from the deployed app |
 
 Without the SMTP variables the endpoint responds `503` and the form offers a prefilled `mailto:` link to the public contact address — it never silently succeeds. Configure the variables in Vercel for server-side delivery.
 
@@ -233,7 +233,7 @@ Without the SMTP variables the endpoint responds `503` and the form offers a pre
 Validation runs in three layers, and every layer is enforced again on the server so a direct `curl` cannot bypass it:
 
 1. **Syntax + disposable domains** — `zod` schema in `src/lib/contact.ts` rejects malformed addresses and known temporary providers (mailinator, yopmail, guerrillamail, 10minutemail, ...), including their subdomains.
-2. **MX record check** — `src/lib/email-mx.ts` asks DNS for the domain's mail exchanger. A domain that cannot receive mail (`fdasfads.com`) returns `400` and the SMTP send never happens. Gmail, Outlook, Yahoo and company domains all pass. The check **fails closed**: if DNS cannot verify the domain, the message is rejected.
+2. **MX record check** — `src/lib/email-mx.ts` asks DNS for the domain's mail exchanger. A domain confirmed not to receive mail (`fdasfads.com`) returns `400` and the SMTP send never happens. Gmail, Outlook, Yahoo and company domains pass. Temporary DNS failures are logged and do not block a contact message; a resolver outage is not proof that an address is invalid.
 3. **Client feedback** — the form validates on blur: syntax/disposable errors appear immediately from the schema, and `POST /api/validate-email` runs the MX check so the error shows under the field before pressing Send.
 
 Tests: `src/lib/contact.test.ts` and `src/lib/email-mx.test.ts`.

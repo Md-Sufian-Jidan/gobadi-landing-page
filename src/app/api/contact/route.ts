@@ -7,7 +7,7 @@ import {
     emailDomain,
     UNVERIFIED_DOMAIN_MESSAGE,
 } from "@/lib/contact";
-import { hasMxRecord } from "@/lib/email-mx";
+import { checkMxRecord } from "@/lib/email-mx";
 import { renderContactEmail } from "@/lib/email-template";
 
 export async function POST(req: Request) {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     const { email, message } = parsed.data;
 
-    if (!(await hasMxRecord(emailDomain(email)))) {
+    if ((await checkMxRecord(emailDomain(email))) === "no-mail-record") {
         return NextResponse.json(
             { error: UNVERIFIED_DOMAIN_MESSAGE, field: "email" },
             { status: 400 },
