@@ -352,6 +352,97 @@ export async function adminVerifyOtpAction(email: string, code: string, purpose:
   return { status: true, data: payload };
 }
 
+export type DeleteOwnAccountResult =
+  | { status: true; message: string }
+  | { status: false; message: string };
+
+async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const err = await res.json();
+    return err?.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Delete the signed-in admin's own account.
+ *
+ * 1. Sends DELETE /dashboard/admins/me with the current session token and the
+ *    supplied password (verified server-side by the backend) — any admin role
+ *    may delete their own account.
+ * 2. Retries once after refreshing an expired access token.
+ * 3. Clears the session cookies only after a successful deletion.
+ */
+export async function deleteOwnAccountAction(
+  password: string
+): Promise<DeleteOwnAccountResult> {
+  try {
+    if (!password) {
+      return { status: false, message: "Enter your password to continue" };
+    }
+
+    const cookieStore = await cookies();
+    let accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN)?.value;
+    if (!accessToken) {
+      return { status: false, message: "No active session" };
+    }
+
+    const API_BASE_URL = getApiBaseUrl();
+    const deleteUrl = `${API_BASE_URL}/dashboard/admins/me`;
+    const doDelete = (token: string) =>
+      fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+        cache: "no-store",
+      });
+
+    let deleteRes = await doDelete(accessToken);
+
+    if (deleteRes.status === 401) {
+      const refreshed = await adminRefreshAccessToken();
+      if (!refreshed.success || !refreshed.accessToken) {
+        cookieStore.delete(ADMIN_ACCESS_TOKEN);
+        cookieStore.delete(ADMIN_REFRESH_TOKEN);
+        return { status: false, message: "Session expired. Please log in again." };
+      }
+      accessToken = refreshed.accessToken;
+      deleteRes = await doDelete(accessToken);
+    }
+
+    if (!deleteRes.ok) {
+      if (deleteRes.status === 404 || deleteRes.status === 405) {
+        return {
+          status: false,
+          message: "Account deletion isn't available yet. Please try again later.",
+        };
+      }
+      if (deleteRes.status === 429) {
+        return {
+          status: false,
+          message: "Too many attempts. Please wait a moment and try again.",
+        };
+      }
+      const message = await readErrorMessage(deleteRes, "Unable to delete your account");
+      // Account still exists — keep the session so a failed attempt
+      // (wrong password, missing permission) doesn't sign the user out.
+      return { status: false, message };
+    }
+
+    cookieStore.delete(ADMIN_ACCESS_TOKEN);
+    cookieStore.delete(ADMIN_REFRESH_TOKEN);
+
+    return { status: true, message: "Your account has been deleted" };
+  } catch (error) {
+    console.error("[deleteOwnAccountAction] failed:", error);
+    return { status: false, message: "Failed to delete your account. Please try again." };
+  }
+}
+
 export async function adminResetPasswordAction(newPassword: string) {
   const cookieStore = await cookies();
   const resetToken = cookieStore.get("adminResetToken")?.value;

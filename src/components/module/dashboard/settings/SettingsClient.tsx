@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, EyeClosed, EyeOff, Camera, Loader2, LogOut, AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronDown, EyeClosed, EyeOff, Camera, Loader2, LogOut, AlertCircle, RefreshCw, AlertTriangle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -525,6 +525,29 @@ export default function SettingsClient() {
                                 </Button>
                             </div>
                         </Card>
+                    </div>
+
+                    {/* Danger zone: delete account */}
+                    <div className="mt-6 rounded-[24px] border border-red-200 bg-red-50/40 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-red-200/80 shadow-xs shrink-0">
+                                <AlertTriangle className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-[#1A1A1A]">Delete Account</h3>
+                                <p className="text-sm text-[#737373] leading-relaxed mt-0.5">
+                                    Permanently delete your account and all associated data. This cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            type="button"
+                            onClick={() => router.push("/dashboard/delete-account")}
+                            className="h-11 px-5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-none cursor-pointer flex items-center gap-2 shrink-0"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Account
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

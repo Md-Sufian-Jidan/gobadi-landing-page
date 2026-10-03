@@ -30,6 +30,7 @@ export default async function middleware(request: NextRequest) {
   const adminRoutes = [
     "/dashboard",
     "/dashboard/admin-access",
+    "/dashboard/delete-account",
     "/dashboard/animal-list",
     "/dashboard/notifications",
     "/dashboard/user-list",
