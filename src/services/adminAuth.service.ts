@@ -389,7 +389,7 @@ export async function deleteOwnAccountAction(
     }
 
     const API_BASE_URL = getApiBaseUrl();
-    const deleteUrl = `${API_BASE_URL}/dashboard/admins/me`;
+    const deleteUrl = `${API_BASE_URL}/dashboard/admins/profile`;
     const doDelete = (token: string) =>
       fetch(deleteUrl, {
         method: "DELETE",
